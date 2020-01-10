@@ -21,6 +21,7 @@ extension EPUBTests {
             case .closed:
                 XCTAssertEqual(epub.metadata?.title, "직지 프로젝트")
                 XCTAssertEqual(epub.metadata?.creator, "수학방")
+                XCTAssertEqual(epub.spine?.itemRefs.count, 93)
                 expectation.fulfill()
             default:
                 break
