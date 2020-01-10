@@ -30,11 +30,11 @@ open class EPUB: ObservableObject {
 
     @Published public private(set) var state: State = .preflight
 
-    public private(set) var resourceURL: URL?
+    @Published public private(set) var resourceURL: URL?
 
-    public private(set) var metadata: Metadata?
-    public private(set) var items: [Item]?
-    public private(set) var spine: Spine?
+    @Published public private(set) var metadata: Metadata?
+    @Published public private(set) var items: [Item]?
+    @Published public private(set) var spine: Spine?
 
     private lazy var mainQueue = DispatchQueue(label: "\(String(reflecting: Self.self)).\(Unmanaged.passUnretained(self).toOpaque()).main")
 
