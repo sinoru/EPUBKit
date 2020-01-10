@@ -1,0 +1,30 @@
+body { 
+margin : 30px 10px 20px; 
+padding : 20px; 
+color : #333; 
+line-height : 150%; 
+text-align : justify; 
+} 
+p, hr, ul, ol { 
+margin : 20px 0; 
+} 
+a { 
+color : #00e; 
+text-decoration : underline; 
+} 
+li { 
+margin : 0 10px;
+padding:0 10px;
+} 
+h1, h2, h3 { 
+font-weight : 700; 
+margin : 30px 0 20px; 
+} 
+h2 { 
+font-size : 1.6em; 
+} 
+h1 { 
+font-size : 2em; 
+}
+
+.ccl { font-weight:700;color:red}

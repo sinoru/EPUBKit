@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<package xmlns="http://www.idpf.org/2007/opf" unique-identifier="BookId" version="2.0">
+  <metadata xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:opf="http://www.idpf.org/2007/opf">
+    <dc:identifier id="BookId" opf:scheme="UUID">urn:uuid:15037ed1-7721-4f33-8534-f6a7473ab654</dc:identifier>
+    <dc:title>직지 프로젝트</dc:title>
+    <dc:creator opf:role="aut">수학방</dc:creator>
+    <dc:language>ko</dc:language>
+    <dc:date opf:event="modification">2017-02-28</dc:date>
+    <dc:rights>크리에이티브 커먼즈 저작자표시-비영리-동일조건변경허락 2.0 대한민국</dc:rights>
+    <dc:source>직지프로젝트(http://www.jikji.org)</dc:source>
+    <meta content="0.7.4" name="Sigil version" />
+  </metadata>
+  <manifest>
+    <item href="toc.ncx" id="ncx" media-type="application/x-dtbncx+xml" />
+    <item href="Styles/Style0001.css" id="Style0001.css" media-type="text/css" />
+    <item href="Text/2.xhtml" id="x2.xhtml" media-type="application/xhtml+xml" />
+    <item href="Text/3.xhtml" id="x3.xhtml" media-type="application/xhtml+xml" />
+    <item href="Text/4.xhtml" id="x4.xhtml" media-type="application/xhtml+xml" />
+    <item href="Text/5.xhtml" id="x5.xhtml" media-type="application/xhtml+xml" />
+    <item href="Text/6.xhtml" id="x6.xhtml" media-type="application/xhtml+xml" />
+    <item href="Text/7.xhtml" id="x7.xhtml" media-type="application/xhtml+xml" />
+    <item href="Text/8.xhtml" id="x8.xhtml" media-type="application/xhtml+xml" />
+    <item href="Text/9.xhtml" id="x9.xhtml" media-type="application/xhtml+xml" />
+    <item href="Text/10.xhtml" id="x10.xhtml" media-type="application/xhtml+xml" />
+    <item href="Text/11.xhtml" id="x11.xhtml" media-type="application/xhtml+xml" />
+    <item href="Text/12.xhtml" id="x12.xhtml" media-type="application/xhtml+xml" />
+    <item href="Text/13.xhtml" id="x13.xhtml" media-type="application/xhtml+xml" />
+    <item href="Text/14.xhtml" id="x14.xhtml" media-type="application/xhtml+xml" />
+    <item href="Text/15.xhtml" id="x15.xhtml" media-type="application/xhtml+xml" />
+    <item href="Text/16.xhtml" id="x16.xhtml" media-type="application/xhtml+xml" />
+    <item href="Text/17.xhtml" id="x17.xhtml" media-type="application/xhtml+xml" />
+    <item href="Text/18.xhtml" id="x18.xhtml" media-type="application/xhtml+xml" />
+    <item href="Text/19.xhtml" id="x19.xhtml" media-type="application/xhtml+xml" />
+    <item href="Text/20.xhtml" id="x20.xhtml" media-type="application/xhtml+xml" />
+    <item href="Text/22.xhtml" id="x22.xhtml" media-type="application/xhtml+xml" />
+    <item href="Text/23.xhtml" id="x23.xhtml" media-type="application/xhtml+xml" />
+    <item href="Text/24.xhtml" id="x24.xhtml" media-type="application/xhtml+xml" />
+    <item href="Text/25.xhtml" id="x25.xhtml" media-type="application/xhtml+xml" />
+    <item href="Text/26.xhtml" id="x26.xhtml" media-type="application/xhtml+xml" />
+    <item href="Text/27.xhtml" id="x27.xhtml" media-type="application/xhtml+xml" />
+    <item href="Text/28.xhtml" id="x28.xhtml" media-type="application/xhtml+xml" />
+    <item href="Text/29.xhtml" id="x29.xhtml" media-type="application/xhtml+xml" />
+    <item href="Text/30.xhtml" id="x30.xhtml" media-type="application/xhtml+xml" />
+    <item href="Text/31.xhtml" id="x31.xhtml" media-type="application/xhtml+xml" />
+    <item href="Text/32.xhtml" id="x32.xhtml" media-type="application/xhtml+xml" />
+    <item href="Text/33.xhtml" id="x33.xhtml" media-type="application/xhtml+xml" />
+    <item href="Text/34.xhtml" id="x34.xhtml" media-type="application/xhtml+xml" />
+    <item href="Text/35.xhtml" id="x35.xhtml" media-type="application/xhtml+xml" />
+    <item href="Text/36.xhtml" id="x36.xhtml" media-type="application/xhtml+xml" />
+    <item href="Text/37.xhtml" id="x37.xhtml" media-type="application/xhtml+xml" />
+    <item href="Text/38.xhtml" id="x38.xhtml" media-type="application/xhtml+xml" />
+    <item href="Text/39.xhtml" id="x39.xhtml" media-type="application/xhtml+xml" />
+    <item href="Text/41.xhtml" id="x41.xhtml" media-type="application/xhtml+xml" />
+    <item href="Text/42.xhtml" id="x42.xhtml" media-type="application/xhtml+xml" />
+    <item href="Text/43.xhtml" id="x43.xhtml" media-type="application/xhtml+xml" />
+    <item href="Text/44.xhtml" id="x44.xhtml" media-type="application/xhtml+xml" />
+    <item href="Text/45.xhtml" id="x45.xhtml" media-type="application/xhtml+xml" />
+    <item href="Text/46.xhtml" id="x46.xhtml" media-type="application/xhtml+xml" />
+    <item href="Text/47.xhtml" id="x47.xhtml" media-type="application/xhtml+xml" />
+    <item href="Text/48.xhtml" id="x48.xhtml" media-type="application/xhtml+xml" />
+    <item href="Text/49.xhtml" id="x49.xhtml" media-type="application/xhtml+xml" />
+    <item href="Text/50.xhtml" id="x50.xhtml" media-type="application/xhtml+xml" />
+    <item href="Text/51.xhtml" id="x51.xhtml" media-type="application/xhtml+xml" />
+    <item href="Text/52.xhtml" id="x52.xhtml" media-type="application/xhtml+xml" />
+    <item href="Text/54.xhtml" id="x54.xhtml" media-type="application/xhtml+xml" />
+    <item href="Text/55.xhtml" id="x55.xhtml" media-type="application/xhtml+xml" />
+    <item href="Text/56.xhtml" id="x56.xhtml" media-type="application/xhtml+xml" />
+    <item href="Text/57.xhtml" id="x57.xhtml" media-type="application/xhtml+xml" />
+    <item href="Text/58.xhtml" id="x58.xhtml" media-type="application/xhtml+xml" />
+    <item href="Text/59.xhtml" id="x59.xhtml" media-type="application/xhtml+xml" />
+    <item href="Text/61.xhtml" id="x61.xhtml" media-type="application/xhtml+xml" />
+    <item href="Text/62.xhtml" id="x62.xhtml" media-type="application/xhtml+xml" />
+    <item href="Text/64.xhtml" id="x64.xhtml" media-type="application/xhtml+xml" />
+    <item href="Text/65.xhtml" id="x65.xhtml" media-type="application/xhtml+xml" />
+    <item href="Text/66.xhtml" id="x66.xhtml" media-type="application/xhtml+xml" />
+    <item href="Text/67.xhtml" id="x67.xhtml" media-type="application/xhtml+xml" />
+    <item href="Text/68.xhtml" id="x68.xhtml" media-type="application/xhtml+xml" />
+    <item href="Text/69.xhtml" id="x69.xhtml" media-type="application/xhtml+xml" />
+    <item href="Text/70.xhtml" id="x70.xhtml" media-type="application/xhtml+xml" />
+    <item href="Text/71.xhtml" id="x71.xhtml" media-type="application/xhtml+xml" />
+    <item href="Text/72.xhtml" id="x72.xhtml" media-type="application/xhtml+xml" />
+    <item href="Text/73.xhtml" id="x73.xhtml" media-type="application/xhtml+xml" />
+    <item href="Text/74.xhtml" id="x74.xhtml" media-type="application/xhtml+xml" />
+    <item href="Text/75.xhtml" id="x75.xhtml" media-type="application/xhtml+xml" />
+    <item href="Text/76.xhtml" id="x76.xhtml" media-type="application/xhtml+xml" />
+    <item href="Text/77.xhtml" id="x77.xhtml" media-type="application/xhtml+xml" />
+    <item href="Text/78.xhtml" id="x78.xhtml" media-type="application/xhtml+xml" />
+    <item href="Text/79.xhtml" id="x79.xhtml" media-type="application/xhtml+xml" />
+    <item href="Text/80.xhtml" id="x80.xhtml" media-type="application/xhtml+xml" />
+    <item href="Text/81.xhtml" id="x81.xhtml" media-type="application/xhtml+xml" />
+    <item href="Text/83.xhtml" id="x83.xhtml" media-type="application/xhtml+xml" />
+    <item href="Text/84.xhtml" id="x84.xhtml" media-type="application/xhtml+xml" />
+    <item href="Text/85.xhtml" id="x85.xhtml" media-type="application/xhtml+xml" />
+    <item href="Text/86.xhtml" id="x86.xhtml" media-type="application/xhtml+xml" />
+    <item href="Text/87.xhtml" id="x87.xhtml" media-type="application/xhtml+xml" />
+    <item href="Text/88.xhtml" id="x88.xhtml" media-type="application/xhtml+xml" />
+    <item href="Text/89.xhtml" id="x89.xhtml" media-type="application/xhtml+xml" />
+    <item href="Text/90.xhtml" id="x90.xhtml" media-type="application/xhtml+xml" />
+    <item href="Text/92.xhtml" id="x92.xhtml" media-type="application/xhtml+xml" />
+    <item href="Text/93.xhtml" id="x93.xhtml" media-type="application/xhtml+xml" />
+    <item href="Text/94.xhtml" id="x94.xhtml" media-type="application/xhtml+xml" />
+    <item href="Text/95.xhtml" id="x95.xhtml" media-type="application/xhtml+xml" />
+    <item href="Text/96.xhtml" id="x96.xhtml" media-type="application/xhtml+xml" />
+    <item href="Text/97.xhtml" id="x97.xhtml" media-type="application/xhtml+xml" />
+    <item href="Text/list2.xhtml" id="list2.xhtml" media-type="application/xhtml+xml" />
+    <item href="Text/list.xhtml" id="list.xhtml" media-type="application/xhtml+xml" />
+    <item href="Text/1.xhtml" id="x1.xhtml" media-type="application/xhtml+xml" />
+    <item href="Text/intro.xhtml" id="intro.xhtml" media-type="application/xhtml+xml" />
+    <item href="Images/ccl.jpg" id="ccl.jpg" media-type="image/jpeg" />
+  </manifest>
+  <spine toc="ncx">
+    <itemref idref="intro.xhtml" />
+    <itemref idref="list.xhtml" />
+    <itemref idref="list2.xhtml" />
+    <itemref idref="x1.xhtml" />
+    <itemref idref="x2.xhtml" />
+    <itemref idref="x3.xhtml" />
+    <itemref idref="x4.xhtml" />
+    <itemref idref="x5.xhtml" />
+    <itemref idref="x6.xhtml" />
+    <itemref idref="x7.xhtml" />
+    <itemref idref="x8.xhtml" />
+    <itemref idref="x9.xhtml" />
+    <itemref idref="x10.xhtml" />
+    <itemref idref="x11.xhtml" />
+    <itemref idref="x12.xhtml" />
+    <itemref idref="x13.xhtml" />
+    <itemref idref="x14.xhtml" />
+    <itemref idref="x15.xhtml" />
+    <itemref idref="x16.xhtml" />
+    <itemref idref="x17.xhtml" />
+    <itemref idref="x18.xhtml" />
+    <itemref idref="x19.xhtml" />
+    <itemref idref="x20.xhtml" />
+    <itemref idref="x22.xhtml" />
+    <itemref idref="x23.xhtml" />
+    <itemref idref="x24.xhtml" />
+    <itemref idref="x25.xhtml" />
+    <itemref idref="x26.xhtml" />
+    <itemref idref="x27.xhtml" />
+    <itemref idref="x28.xhtml" />
+    <itemref idref="x29.xhtml" />
+    <itemref idref="x30.xhtml" />
+    <itemref idref="x31.xhtml" />
+    <itemref idref="x32.xhtml" />
+    <itemref idref="x33.xhtml" />
+    <itemref idref="x34.xhtml" />
+    <itemref idref="x35.xhtml" />
+    <itemref idref="x36.xhtml" />
+    <itemref idref="x37.xhtml" />
+    <itemref idref="x38.xhtml" />
+    <itemref idref="x39.xhtml" />
+    <itemref idref="x41.xhtml" />
+    <itemref idref="x42.xhtml" />
+    <itemref idref="x43.xhtml" />
+    <itemref idref="x44.xhtml" />
+    <itemref idref="x45.xhtml" />
+    <itemref idref="x46.xhtml" />
+    <itemref idref="x47.xhtml" />
+    <itemref idref="x48.xhtml" />
+    <itemref idref="x49.xhtml" />
+    <itemref idref="x50.xhtml" />
+    <itemref idref="x51.xhtml" />
+    <itemref idref="x52.xhtml" />
+    <itemref idref="x54.xhtml" />
+    <itemref idref="x55.xhtml" />
+    <itemref idref="x56.xhtml" />
+    <itemref idref="x57.xhtml" />
+    <itemref idref="x58.xhtml" />
+    <itemref idref="x59.xhtml" />
+    <itemref idref="x61.xhtml" />
+    <itemref idref="x62.xhtml" />
+    <itemref idref="x64.xhtml" />
+    <itemref idref="x65.xhtml" />
+    <itemref idref="x66.xhtml" />
+    <itemref idref="x67.xhtml" />
+    <itemref idref="x68.xhtml" />
+    <itemref idref="x69.xhtml" />
+    <itemref idref="x70.xhtml" />
+    <itemref idref="x71.xhtml" />
+    <itemref idref="x72.xhtml" />
+    <itemref idref="x73.xhtml" />
+    <itemref idref="x74.xhtml" />
+    <itemref idref="x75.xhtml" />
+    <itemref idref="x76.xhtml" />
+    <itemref idref="x77.xhtml" />
+    <itemref idref="x78.xhtml" />
+    <itemref idref="x79.xhtml" />
+    <itemref idref="x80.xhtml" />
+    <itemref idref="x81.xhtml" />
+    <itemref idref="x83.xhtml" />
+    <itemref idref="x84.xhtml" />
+    <itemref idref="x85.xhtml" />
+    <itemref idref="x86.xhtml" />
+    <itemref idref="x87.xhtml" />
+    <itemref idref="x88.xhtml" />
+    <itemref idref="x89.xhtml" />
+    <itemref idref="x90.xhtml" />
+    <itemref idref="x92.xhtml" />
+    <itemref idref="x93.xhtml" />
+    <itemref idref="x94.xhtml" />
+    <itemref idref="x95.xhtml" />
+    <itemref idref="x96.xhtml" />
+    <itemref idref="x97.xhtml" />
+  </spine>
+  <guide />
+</package>

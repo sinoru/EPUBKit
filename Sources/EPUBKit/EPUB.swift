@@ -18,6 +18,8 @@ open class EPUB: ObservableObject {
 
     public private(set) var metadata: Metadata?
 
+    private lazy var mainQueue = DispatchQueue(label: "\(String(reflecting: Self.self)).\(Unmanaged.passUnretained(self).toOpaque()).main")
+
     public init(fileURL url: URL) throws {
         self.fileURL = url
         self.fileWrapper = try FileWrapper(url: url)
@@ -27,7 +29,7 @@ open class EPUB: ObservableObject {
         try initializeEPUB()
     }
 
-    func initializeEPUB() throws {
+    private func initializeEPUB() throws {
         if fileWrapper.isDirectory {
             try initializeEPUBDirectory()
         } else {
@@ -35,15 +37,13 @@ open class EPUB: ObservableObject {
         }
     }
 
-    func initializeEPUBFile() throws {
+    private func initializeEPUBFile() throws {
         let zip = try ZIP(fileURL: self.fileURL)
-
-        debugPrint(zip)
 
         zip.loadFile(filename: metaInfContainerFilename) { (result) in
             switch result {
             case .success(let metaInfItem):
-                DispatchQueue.global().async {
+                self.mainQueue.async {
                     let operation = XMLParseOperation(data: metaInfItem.data)
                     operation.start()
 
@@ -60,7 +60,7 @@ open class EPUB: ObservableObject {
                     zip.loadFile(filename: opfPath) { (result) in
                         switch result {
                         case .success(let opfItem):
-                            DispatchQueue.global().async {
+                            self.mainQueue.async {
                                 let operation = XMLParseOperation(data: opfItem.data)
                                 operation.start()
 
@@ -87,7 +87,54 @@ open class EPUB: ObservableObject {
         }
     }
 
-    func initializeEPUBDirectory() throws {
+    private func initializeEPUBDirectory() throws {
+        guard
+            let mainInfFileWrapper = fileWrapper[metaInfContainerFilename],
+            let mainInfData = mainInfFileWrapper.regularFileContents
+        else {
+            self.state = .error(Error.invalidEPUB)
+            return
+        }
+
+        mainQueue.async {
+            let operation = XMLParseOperation(data: mainInfData)
+            operation.start()
+
+            guard let rootfile = operation.xmlDocument["container", "rootfiles", "rootfile"] else {
+                self.state = .error(Error.invalidEPUB)
+                return
+            }
+
+            guard let opfPath = rootfile.attributes["full-path"] else {
+                self.state = .error(Error.invalidEPUB)
+                return
+            }
+
+            guard
+                let opfFileWrapper = self.fileWrapper[opfPath],
+                let opfData = opfFileWrapper.regularFileContents
+            else {
+                self.state = .error(Error.invalidEPUB)
+                return
+            }
+
+            self.mainQueue.async {
+                let operation = XMLParseOperation(data: opfData)
+                operation.start()
+
+                guard let metadata = operation.xmlDocument["package", "metadata"] else {
+                    self.state = .error(Error.invalidEPUB)
+                    return
+                }
+
+                self.metadata = .init(
+                    title: metadata["dc:title"]?.character,
+                    creator: metadata["dc:creator"]?.character
+                )
+
+                self.state = .normal
+            }
+        }
 
     }
 }
