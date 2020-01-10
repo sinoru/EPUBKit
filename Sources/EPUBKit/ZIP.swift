@@ -12,8 +12,6 @@ class ZIP {
     let fileURL: URL
     var zipReader: UnsafeMutableRawPointer? = nil
 
-    private let mainQueue = DispatchQueue.init(label: "\(String(reflecting: ZIP.self)).main")
-
     init(fileURL url: URL) throws {
         self.fileURL = url
 
@@ -27,40 +25,74 @@ class ZIP {
     }
 
     deinit {
+        mz_zip_reader_close(zipReader)
         mz_zip_reader_delete(&zipReader)
     }
 
-    func loadFile(filename: String, caseSensitive: Bool = false, completion: @escaping (Result<Item, Error>) -> Void) {
-        mainQueue.async {
-            var error = MZ_OK
+    func loadFile(filename: String, caseSensitive: Bool = false) throws -> Item {
+        var error = MZ_OK
 
-            let filenameCString = filename.cString(using: .utf8)
+        let filenameCString = filename.cString(using: .utf8)
 
-            error = mz_zip_reader_locate_entry(self.zipReader, filenameCString, caseSensitive ? 0 : 1)
-            guard error == MZ_OK else {
-                completion(.failure(ZIP.Error(code: error)))
-                return
+        error = mz_zip_reader_locate_entry(self.zipReader, filenameCString, caseSensitive ? 0 : 1)
+        guard error == MZ_OK else {
+            throw ZIP.Error(code: error)
+        }
+
+        var file: UnsafeMutablePointer<mz_zip_file>?
+
+        error = mz_zip_reader_entry_get_info(self.zipReader, &file)
+        guard error == MZ_OK else {
+            throw ZIP.Error(code: error)
+        }
+
+        let bufferLength = mz_zip_reader_entry_save_buffer_length(self.zipReader)
+
+        var buffer = [UInt8](repeating: 0x00, count: Int(bufferLength))
+
+        error = mz_zip_reader_entry_save_buffer(self.zipReader, &buffer, bufferLength)
+        guard error == MZ_OK else {
+            throw ZIP.Error(code: error)
+        }
+
+        return .init(filename: file.flatMap({ String(cString: $0.pointee.filename) }) ?? filename, data: Data(buffer))
+    }
+
+    func unarchiveItems(to dstURL: URL, progressHandler: ((Double) -> Void)? = nil) throws {
+        var progressHandler = progressHandler
+
+        let progressCallback: @convention(c) (UnsafeMutableRawPointer?, UnsafeMutableRawPointer?, UnsafeMutablePointer<mz_zip_file>?, Int64) -> Int32 = { (handle, userData, fileInfo, position) in
+            var raw = UInt8(0)
+            mz_zip_reader_get_raw(handle, &raw)
+
+            guard let fileInfo = fileInfo?.pointee else {
+                fatalError()
             }
 
-            var file: UnsafeMutablePointer<mz_zip_file>?
-
-            error = mz_zip_reader_entry_get_info(self.zipReader, &file)
-            guard error == MZ_OK else {
-                completion(.failure(ZIP.Error(code: error)))
-                return
+            let progress: Double
+            if (raw > 0 && fileInfo.compressed_size > 0) {
+                progress = Double(position) / Double(fileInfo.compressed_size) * 100
+            } else if (raw == 0 && fileInfo.uncompressed_size > 0) {
+                progress = Double(position) / Double(fileInfo.uncompressed_size) * 100
+            } else {
+                progress = -1
             }
 
-            let bufferLength = mz_zip_reader_entry_save_buffer_length(self.zipReader)
+            userData?.assumingMemoryBound(to: ((Double) -> Void)?.self).pointee?(progress)
 
-            var buffer = [UInt8](repeating: 0x00, count: Int(bufferLength))
+            return MZ_OK
+        }
 
-            error = mz_zip_reader_entry_save_buffer(self.zipReader, &buffer, bufferLength)
-            guard error == MZ_OK else {
-                completion(.failure(ZIP.Error(code: error)))
-                return
-            }
+        mz_zip_reader_set_progress_cb(zipReader, &progressHandler, progressCallback)
+        defer {
+            mz_zip_reader_set_progress_cb(zipReader, nil, nil)
+        }
 
-            completion(.success(.init(filename: file.flatMap({ String(cString: $0.pointee.filename) }) ?? filename, data: Data(buffer))))
+        var error = MZ_OK
+
+        error = mz_zip_reader_save_all(zipReader, dstURL.path.cString(using: .utf8))
+        guard error == MZ_OK || error == MZ_END_OF_LIST else {
+            throw ZIP.Error(code: error)
         }
     }
 }
