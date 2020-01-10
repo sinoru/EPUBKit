@@ -9,7 +9,7 @@ let observationForState = epub.$state
     .sink {
         switch $0 {
         case .closed:
-            // epub.metadata can be accesed in this state
+            // epub.metadata, epub.spine, epub.items can be accesed in this state
             epub.open { (result) in
                 switch result {
                 case .success:

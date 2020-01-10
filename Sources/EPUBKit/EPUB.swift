@@ -27,8 +27,11 @@ open class EPUB: ObservableObject {
 
     @Published public private(set) var state: State = .preflight
 
-    public private(set) var metadata: Metadata?
     public private(set) var resourceURL: URL?
+
+    public private(set) var metadata: Metadata?
+    public private(set) var items: [Item]?
+    public private(set) var spine: Spine?
 
     private lazy var mainQueue = DispatchQueue(label: "\(String(reflecting: Self.self)).\(Unmanaged.passUnretained(self).toOpaque()).main")
 
@@ -81,10 +84,21 @@ open class EPUB: ObservableObject {
                     return
                 }
 
-                self.metadata = .init(
-                    title: opfMetadata["dc:title"]?.character,
-                    creator: opfMetadata["dc:creator"]?.character
-                )
+                self.metadata = .init(metadataXMLElement: opfMetadata)
+
+                guard let opfManifest = opfParseOperation.xmlDocument["package", "manifest"] else {
+                    self.state = .error(Error.invalidEPUB)
+                    return
+                }
+
+                self.items = try Item.items(manifestXMLElement: opfManifest)
+
+                guard let opfSpine = opfParseOperation.xmlDocument["package", "spine"] else {
+                    self.state = .error(Error.invalidEPUB)
+                    return
+                }
+
+                self.spine = try .init(spineXMLElement: opfSpine)
 
                 self.state = .closed
             } catch {
@@ -125,23 +139,37 @@ open class EPUB: ObservableObject {
             }
 
             self.mainQueue.async {
-                let operation = XMLParseOperation(data: opfData)
-                operation.start()
+                do {
+                    let operation = XMLParseOperation(data: opfData)
+                    operation.start()
 
-                guard let metadata = operation.xmlDocument["package", "metadata"] else {
-                    self.state = .error(Error.invalidEPUB)
-                    return
+                    guard let opfMetadata = operation.xmlDocument["package", "metadata"] else {
+                        self.state = .error(Error.invalidEPUB)
+                        return
+                    }
+
+                    self.metadata = .init(metadataXMLElement: opfMetadata)
+
+                    guard let opfManifest = operation.xmlDocument["package", "manifest"] else {
+                        self.state = .error(Error.invalidEPUB)
+                        return
+                    }
+
+                    self.items = try Item.items(manifestXMLElement: opfManifest)
+
+                    guard let opfSpine = operation.xmlDocument["package", "spine"] else {
+                        self.state = .error(Error.invalidEPUB)
+                        return
+                    }
+
+                    self.spine = try .init(spineXMLElement: opfSpine)
+
+                    self.state = .closed
+                } catch {
+                    self.state = .error(error)
                 }
-
-                self.metadata = .init(
-                    title: metadata["dc:title"]?.character,
-                    creator: metadata["dc:creator"]?.character
-                )
-
-                self.state = .closed
             }
         }
-
     }
 
     open func open(completion: ((Result<Void, Swift.Error>) -> Void)? = nil) {
@@ -207,12 +235,5 @@ extension EPUB {
     public enum Error: Swift.Error {
         case invalidEPUB
         case invalidState
-    }
-}
-
-extension EPUB {
-    public struct Metadata {
-        public var title: String?
-        public var creator: String?
     }
 }
