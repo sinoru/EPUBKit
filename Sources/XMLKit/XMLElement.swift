@@ -65,3 +65,19 @@ extension XMLElement {
         }
     }
 }
+
+extension XMLElement {
+    subscript(elementNames: String...) -> XMLElement? {
+        self[elementNames]
+    }
+
+    subscript(elementNames: [String]) -> XMLElement? {
+        return self.childeren.first(where: { $0.elementName == elementNames.first }).flatMap {
+            if elementNames.count > 1 {
+                return $0[Array(elementNames.dropFirst())]
+            } else {
+                return $0
+            }
+        }
+    }
+}

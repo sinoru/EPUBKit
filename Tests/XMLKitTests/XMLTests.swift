@@ -57,6 +57,20 @@ final class XMLTests: XCTestCase {
         ])
     }
 
+    func testXMLSubscriptByElementsName() throws {
+        let xmlData = try Data(contentsOf: URL(fileURLWithPath: #file).deletingLastPathComponent().appendingPathComponent("note.xml"))
+
+        let xmlParseOperation = XMLParseOperation(data: xmlData)
+        xmlParseOperation.start()
+
+        let xmlDocument = xmlParseOperation.xmlDocument
+
+        XCTAssertEqual(xmlDocument["note", "to"]?.elementName, "to")
+        XCTAssertEqual(xmlDocument["note", "to"]?.character, "Tove")
+        XCTAssertEqual(xmlDocument["note", "body"]?.elementName, "body")
+        XCTAssertEqual(xmlDocument["note", "body"]?.character, "Don't forget me this weekend!")
+    }
+
     static var allTests = [
         ("testXMLInitNote", testXMLInitNote),
         ("testXMLInitContainer", testXMLInitContainer),
