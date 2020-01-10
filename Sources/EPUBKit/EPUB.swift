@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import XMLKit
 
 let metaInfContainerFilename = "META-INF/container.xml"
 
@@ -17,6 +18,8 @@ open class EPUB {
     public init(fileURL url: URL) throws {
         self.fileURL = url
         self.fileWrapper = try FileWrapper(url: url)
+
+        debugPrint(self.fileURL)
 
         try initializeEPUB()
     }
@@ -32,10 +35,15 @@ open class EPUB {
     func initializeEPUBFile() throws {
         let zip = try ZIP(fileURL: self.fileURL)
 
+        debugPrint(zip)
+
         zip.loadFile(filename: metaInfContainerFilename) { (result) in
             switch result {
             case .success(let item):
-                break
+                let operation = XMLParseOperation(data: item.data)
+                operation.start()
+
+                debugPrint(operation.xmlDocument)
             case .failure(let error):
                 self.state = .error(error)
             }

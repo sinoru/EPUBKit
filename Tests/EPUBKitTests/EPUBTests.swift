@@ -13,7 +13,7 @@ import XCTest
 
 final class EPUBTests: XCTestCase {
     func testEPUBInit() {
-
+        XCTAssertNoThrow(try EPUB(fileURL: URL(fileURLWithPath: #file).deletingLastPathComponent().appendingPathComponent("jikji.epub+zip.epub")))
     }
 
     func testExample() {

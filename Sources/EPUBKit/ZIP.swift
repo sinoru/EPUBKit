@@ -10,7 +10,7 @@ import CMinizip
 
 class ZIP {
     let fileURL: URL
-    var zipReader: UnsafeMutableRawPointer?
+    var zipReader: UnsafeMutableRawPointer? = nil
 
     private let mainQueue = DispatchQueue.init(label: "\(String(reflecting: ZIP.self)).main")
 
@@ -19,7 +19,8 @@ class ZIP {
 
         var error = MZ_OK
 
-        error = mz_zip_reader_open_file(&zipReader, url.path)
+        mz_zip_reader_create(&zipReader);
+        error = mz_zip_reader_open_file(zipReader, url.path)
         guard error == MZ_OK else {
             throw ZIP.Error(code: error)
         }
@@ -35,7 +36,7 @@ class ZIP {
 
             let filenameCString = filename.cString(using: .utf8)
 
-            error = mz_zip_reader_locate_entry(&self.zipReader, filenameCString, caseSensitive ? 0 : 1)
+            error = mz_zip_reader_locate_entry(self.zipReader, filenameCString, caseSensitive ? 0 : 1)
             guard error == MZ_OK else {
                 completion(.failure(ZIP.Error(code: error)))
                 return
@@ -43,17 +44,17 @@ class ZIP {
 
             var file: UnsafeMutablePointer<mz_zip_file>?
 
-            error = mz_zip_reader_entry_get_info(&self.zipReader, &file)
+            error = mz_zip_reader_entry_get_info(self.zipReader, &file)
             guard error == MZ_OK else {
                 completion(.failure(ZIP.Error(code: error)))
                 return
             }
 
-            let bufferLength = mz_zip_reader_entry_save_buffer_length(&self.zipReader)
+            let bufferLength = mz_zip_reader_entry_save_buffer_length(self.zipReader)
 
             var buffer = [UInt8](repeating: 0x00, count: Int(bufferLength))
 
-            error = mz_zip_reader_entry_save_buffer(&self.zipReader, &buffer, bufferLength)
+            error = mz_zip_reader_entry_save_buffer(self.zipReader, &buffer, bufferLength)
             guard error == MZ_OK else {
                 completion(.failure(ZIP.Error(code: error)))
                 return
