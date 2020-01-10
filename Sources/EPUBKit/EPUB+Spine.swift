@@ -16,7 +16,7 @@ extension EPUB {
 }
 
 extension EPUB.Spine {
-    public struct ItemRef {
+    public struct ItemRef: Identifiable {
         public var id: String
     }
 }

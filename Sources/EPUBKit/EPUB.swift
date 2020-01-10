@@ -27,9 +27,10 @@ open class EPUB: ObservableObject {
 
     @Published public private(set) var state: State = .preflight
 
-    public private(set) var metadata: Metadata?
     public private(set) var resourceURL: URL?
 
+    public private(set) var metadata: Metadata?
+    public private(set) var items: [Item]?
     public private(set) var spine: Spine?
 
     private lazy var mainQueue = DispatchQueue(label: "\(String(reflecting: Self.self)).\(Unmanaged.passUnretained(self).toOpaque()).main")
@@ -84,6 +85,13 @@ open class EPUB: ObservableObject {
                 }
 
                 self.metadata = .init(metadataXMLElement: opfMetadata)
+
+                guard let opfManifest = opfParseOperation.xmlDocument["package", "manifest"] else {
+                    self.state = .error(Error.invalidEPUB)
+                    return
+                }
+
+                self.items = try Item.items(manifestXMLElement: opfManifest)
 
                 guard let opfSpine = opfParseOperation.xmlDocument["package", "spine"] else {
                     self.state = .error(Error.invalidEPUB)
@@ -141,6 +149,13 @@ open class EPUB: ObservableObject {
                     }
 
                     self.metadata = .init(metadataXMLElement: opfMetadata)
+
+                    guard let opfManifest = operation.xmlDocument["package", "manifest"] else {
+                        self.state = .error(Error.invalidEPUB)
+                        return
+                    }
+
+                    self.items = try Item.items(manifestXMLElement: opfManifest)
 
                     guard let opfSpine = operation.xmlDocument["package", "spine"] else {
                         self.state = .error(Error.invalidEPUB)
