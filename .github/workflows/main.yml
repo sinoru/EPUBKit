@@ -1,0 +1,19 @@
+name: CI
+
+on: [push]
+
+jobs:
+  tests:
+    name: Tests
+    runs-on: ${{ matrix.operating-system }}
+    strategy:
+      fail-fast: false
+      matrix:
+        operating-system: [macOS-latest]
+    steps:
+    - uses: actions/checkout@v1
+    - name: Setup Xcode
+      uses: ./
+      with:
+        xcode-version: 11.3
+    - run: swift test
