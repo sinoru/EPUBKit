@@ -14,5 +14,6 @@ final class EPUBTests: XCTestCase {
     static var allTests = [
         ("testEPUBInitDirectory", testEPUBInitDirectory),
         ("testEPUBInitZIP", testEPUBInitZIP),
+        ("testEPUBOpenZIP", testEPUBOpenZIP),
     ]
 }
