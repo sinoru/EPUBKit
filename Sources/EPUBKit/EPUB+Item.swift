@@ -11,7 +11,7 @@ import XMLKit
 extension EPUB {
     public struct Item: Identifiable {
         public var id: String
-        public var path: String
+        public var absolutePath: String
         public var mimeType: String
     }
 }
@@ -23,7 +23,7 @@ extension EPUB.Item {
                 throw EPUB.Error.invalidEPUB
             }
 
-            guard let path = $0.attributes["href"] else {
+            guard let absolutePath = $0.attributes["href"] else {
                 throw EPUB.Error.invalidEPUB
             }
 
@@ -31,7 +31,7 @@ extension EPUB.Item {
                 throw EPUB.Error.invalidEPUB
             }
 
-            return .init(id: id, path: path, mimeType: mimeType)
+            return .init(id: id, absolutePath: absolutePath, mimeType: mimeType)
         }
     }
 }
