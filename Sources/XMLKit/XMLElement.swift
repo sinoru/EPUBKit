@@ -8,18 +8,18 @@
 import Foundation
 
 public struct XMLElement {
-    var elementName: String
-    var namespaceURI: String?
-    var qualifiedName: String?
-    var attributes: [String: String]
+    public var elementName: String
+    public var namespaceURI: String?
+    public var qualifiedName: String?
+    public var attributes: [String: String]
 
-    var character: String?
+    public var character: String?
 
-    var childeren: [Self] = []
+    public var childeren: [Self] = []
 }
 
 extension XMLElement {
-    subscript(indexPath: IndexPath) -> Self? {
+    public subscript(indexPath: IndexPath) -> Self? {
         get {
             var indexPath = indexPath
 
@@ -67,11 +67,11 @@ extension XMLElement {
 }
 
 extension XMLElement {
-    subscript(elementNames: String...) -> XMLElement? {
+    public subscript(elementNames: String...) -> XMLElement? {
         self[elementNames]
     }
 
-    subscript(elementNames: [String]) -> XMLElement? {
+    public subscript(elementNames: [String]) -> XMLElement? {
         return self.childeren.first(where: { $0.elementName == elementNames.first }).flatMap {
             if elementNames.count > 1 {
                 return $0[Array(elementNames.dropFirst())]

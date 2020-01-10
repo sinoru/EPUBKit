@@ -8,11 +8,11 @@
 import Foundation
 
 public struct XMLDocument {
-    var elements: [XMLElement] = []
+    public var elements: [XMLElement] = []
 }
 
 extension XMLDocument {
-    subscript(indexPath: IndexPath) -> XMLElement? {
+    public subscript(indexPath: IndexPath) -> XMLElement? {
         get {
             var indexPath = indexPath
 
@@ -53,7 +53,7 @@ extension XMLDocument {
         }
     }
 
-    subscript(indexes: [Int]) -> XMLElement? {
+    public subscript(indexes: [Int]) -> XMLElement? {
         get {
             return self[IndexPath(indexes: indexes)]
         }
@@ -64,11 +64,11 @@ extension XMLDocument {
 }
 
 extension XMLDocument {
-    subscript(elementNames: String...) -> XMLElement? {
+    public subscript(elementNames: String...) -> XMLElement? {
         self[elementNames]
     }
 
-    subscript(elementNames: [String]) -> XMLElement? {
+    public subscript(elementNames: [String]) -> XMLElement? {
         return self.elements.first(where: { $0.elementName == elementNames.first }).flatMap {
             if elementNames.count > 1 {
                 return $0[Array(elementNames.dropFirst())]
