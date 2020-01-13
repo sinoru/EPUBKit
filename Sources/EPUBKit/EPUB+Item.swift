@@ -17,6 +17,12 @@ extension EPUB {
 }
 
 extension EPUB.Item {
+    public struct Ref: Identifiable {
+        public var id: String
+    }
+}
+
+extension EPUB.Item {
     static func items(manifestXMLElement: XMLKit.XMLElement) throws -> [Self] {
         return try manifestXMLElement.childeren.map {
             guard let id = $0.attributes["id"] else {
