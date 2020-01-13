@@ -74,12 +74,12 @@ open class EPUB: ObservableObject {
                 metaInfParseOperation.start()
 
                 guard let metaInfRootfile = metaInfParseOperation.xmlDocument["container", "rootfiles", "rootfile"] else {
-                    self.state = .error(Error.invalidEPUB)
+                    self.updateState(.error(Error.invalidEPUB))
                     return
                 }
 
                 guard let metaInfOPFPath = metaInfRootfile.attributes["full-path"] else {
-                    self.state = .error(Error.invalidEPUB)
+                    self.updateState(.error(Error.invalidEPUB))
                     return
                 }
 
@@ -89,29 +89,29 @@ open class EPUB: ObservableObject {
                 opfParseOperation.start()
 
                 guard let opfMetadata = opfParseOperation.xmlDocument["package", "metadata"] else {
-                    self.state = .error(Error.invalidEPUB)
+                    self.updateState(.error(Error.invalidEPUB))
                     return
                 }
 
                 self.metadata = .init(metadataXMLElement: opfMetadata)
 
                 guard let opfManifest = opfParseOperation.xmlDocument["package", "manifest"] else {
-                    self.state = .error(Error.invalidEPUB)
+                    self.updateState(.error(Error.invalidEPUB))
                     return
                 }
 
                 self.items = try Item.items(manifestXMLElement: opfManifest)
 
                 guard let opfSpine = opfParseOperation.xmlDocument["package", "spine"] else {
-                    self.state = .error(Error.invalidEPUB)
+                    self.updateState(.error(Error.invalidEPUB))
                     return
                 }
 
                 self.spine = try .init(spineXMLElement: opfSpine)
 
-                self.state = .closed
+                self.updateState(.closed)
             } catch {
-                self.state = .error(error)
+                self.updateState(.error(error))
             }
         }
     }
@@ -121,7 +121,7 @@ open class EPUB: ObservableObject {
             let mainInfFileWrapper = epubFileWrapper[metaInfContainerFilename],
             let mainInfData = mainInfFileWrapper.regularFileContents
         else {
-            self.state = .error(Error.invalidEPUB)
+            self.updateState(.error(Error.invalidEPUB))
             return
         }
 
@@ -130,12 +130,12 @@ open class EPUB: ObservableObject {
             operation.start()
 
             guard let rootfile = operation.xmlDocument["container", "rootfiles", "rootfile"] else {
-                self.state = .error(Error.invalidEPUB)
+                self.updateState(.error(Error.invalidEPUB))
                 return
             }
 
             guard let opfPath = rootfile.attributes["full-path"] else {
-                self.state = .error(Error.invalidEPUB)
+                self.updateState(.error(Error.invalidEPUB))
                 return
             }
 
@@ -143,7 +143,7 @@ open class EPUB: ObservableObject {
                 let opfFileWrapper = self.epubFileWrapper[opfPath],
                 let opfData = opfFileWrapper.regularFileContents
             else {
-                self.state = .error(Error.invalidEPUB)
+                self.updateState(.error(Error.invalidEPUB))
                 return
             }
 
@@ -153,29 +153,29 @@ open class EPUB: ObservableObject {
                     operation.start()
 
                     guard let opfMetadata = operation.xmlDocument["package", "metadata"] else {
-                        self.state = .error(Error.invalidEPUB)
+                        self.updateState(.error(Error.invalidEPUB))
                         return
                     }
 
                     self.metadata = .init(metadataXMLElement: opfMetadata)
 
                     guard let opfManifest = operation.xmlDocument["package", "manifest"] else {
-                        self.state = .error(Error.invalidEPUB)
+                        self.updateState(.error(Error.invalidEPUB))
                         return
                     }
 
                     self.items = try Item.items(manifestXMLElement: opfManifest)
 
                     guard let opfSpine = operation.xmlDocument["package", "spine"] else {
-                        self.state = .error(Error.invalidEPUB)
+                        self.updateState(.error(Error.invalidEPUB))
                         return
                     }
 
                     self.spine = try .init(spineXMLElement: opfSpine)
 
-                    self.state = .closed
+                    self.updateState(.closed)
                 } catch {
-                    self.state = .error(error)
+                    self.updateState(.error(error))
                 }
             }
         }
@@ -189,7 +189,7 @@ open class EPUB: ObservableObject {
 
         guard !epubFileWrapper.isDirectory else {
             resourceURL = epubFileURL
-            state = .normal
+            self.updateState(.normal)
             completion?(.success(()))
             return
         }
@@ -203,7 +203,7 @@ open class EPUB: ObservableObject {
                 self.resourceURL = self.temporaryDirectoryFileURL
                 completion?(.success(()))
             } catch {
-                self.state = .error(error)
+                self.updateState(.error(error))
                 completion?(.failure(error))
             }
         }
@@ -217,7 +217,7 @@ open class EPUB: ObservableObject {
 
         guard !epubFileWrapper.isDirectory else {
             resourceURL = nil
-            state = .closed
+            self.updateState(.closed)
             completion?(.success(()))
             return
         }
@@ -227,6 +227,12 @@ open class EPUB: ObservableObject {
             completion?(.success(()))
         } catch {
             completion?(.failure(error))
+        }
+    }
+
+    private func updateState(_ state: State) {
+        DispatchQueue.main.async {
+            self.state = state
         }
     }
 }
