@@ -40,6 +40,9 @@ open class EPUB: ObservableObject {
 
     public init(fileURL url: URL) throws {
         self.epubFileURL = url
+        if #available(OSX 10.7, iOS 8.0, *) {
+            self.epubFileURL.startAccessingSecurityScopedResource()
+        }
         self.epubFileWrapper = try FileWrapper(url: url)
 
         try initializeEPUB()
@@ -47,6 +50,9 @@ open class EPUB: ObservableObject {
 
     deinit {
         self.close()
+        if #available(OSX 10.7, iOS 8.0, *) {
+            self.epubFileURL.stopAccessingSecurityScopedResource()
+        }
     }
 
     private func initializeEPUB() throws {
