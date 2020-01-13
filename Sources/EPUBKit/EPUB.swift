@@ -41,11 +41,11 @@ open class EPUB: ObservableObject {
     public init(fileURL url: URL) throws {
         self.epubFileURL = url
         if #available(OSX 10.7, iOS 8.0, *) {
-            self.epubFileURL.startAccessingSecurityScopedResource()
+            _ = self.epubFileURL.startAccessingSecurityScopedResource()
         }
         self.epubFileWrapper = try FileWrapper(url: url)
 
-        try initializeEPUB()
+        initializeEPUB()
     }
 
     deinit {
@@ -55,22 +55,23 @@ open class EPUB: ObservableObject {
         }
     }
 
-    private func initializeEPUB() throws {
-        if epubFileWrapper.isDirectory {
-            try initializeEPUBDirectory()
-        } else {
-            try initializeEPUBFile()
-        }
-    }
-
-    private func initializeEPUBFile() throws {
+    private func initializeEPUB() {
         mainQueue.async {
             do {
-                let zip = try ZIP(fileURL: self.epubFileURL)
+                let fileHandler: FileHandler = try {
+                    if self.epubFileWrapper.isDirectory {
+                        return .fileWrapper(self.epubFileWrapper)
+                    } else {
+                        return .zip(try ZIP(fileURL: self.epubFileURL))
+                    }
+                }()
 
-                let metaInfItem = try zip.loadFile(filename: metaInfContainerFilename)
+                guard let metaInfData = try fileHandler.loadFileData(filename: metaInfContainerFilename) else {
+                    self.updateState(.error(Error.invalidEPUB))
+                    return
+                }
 
-                let metaInfParseOperation = XMLParseOperation(data: metaInfItem.data)
+                let metaInfParseOperation = XMLParseOperation(data: metaInfData)
                 metaInfParseOperation.start()
 
                 guard let metaInfRootfile = metaInfParseOperation.xmlDocument["container", "rootfiles", "rootfile"] else {
@@ -83,9 +84,12 @@ open class EPUB: ObservableObject {
                     return
                 }
 
-                let opfItem = try zip.loadFile(filename: metaInfOPFPath)
+                guard let opfData = try fileHandler.loadFileData(filename: metaInfOPFPath) else {
+                    self.updateState(.error(Error.invalidEPUB))
+                    return
+                }
 
-                let opfParseOperation = XMLParseOperation(data: opfItem.data)
+                let opfParseOperation = XMLParseOperation(data: opfData)
                 opfParseOperation.start()
 
                 guard let opfMetadata = opfParseOperation.xmlDocument["package", "metadata"] else {
@@ -93,90 +97,34 @@ open class EPUB: ObservableObject {
                     return
                 }
 
-                self.metadata = .init(metadataXMLElement: opfMetadata)
+                let metadata = Metadata(metadataXMLElement: opfMetadata)
+                DispatchQueue.main.async {
+                    self.metadata = metadata
+                }
 
                 guard let opfManifest = opfParseOperation.xmlDocument["package", "manifest"] else {
                     self.updateState(.error(Error.invalidEPUB))
                     return
                 }
 
-                self.items = try Item.items(manifestXMLElement: opfManifest)
+                let items = try Item.items(manifestXMLElement: opfManifest)
+                DispatchQueue.main.async {
+                    self.items = items
+                }
 
                 guard let opfSpine = opfParseOperation.xmlDocument["package", "spine"] else {
                     self.updateState(.error(Error.invalidEPUB))
                     return
                 }
 
-                self.spine = try .init(spineXMLElement: opfSpine)
+                let spine = try Spine(spineXMLElement: opfSpine)
+                DispatchQueue.main.async {
+                    self.spine = spine
+                }
 
                 self.updateState(.closed)
             } catch {
                 self.updateState(.error(error))
-            }
-        }
-    }
-
-    private func initializeEPUBDirectory() throws {
-        guard
-            let mainInfFileWrapper = epubFileWrapper[metaInfContainerFilename],
-            let mainInfData = mainInfFileWrapper.regularFileContents
-        else {
-            self.updateState(.error(Error.invalidEPUB))
-            return
-        }
-
-        mainQueue.async {
-            let operation = XMLParseOperation(data: mainInfData)
-            operation.start()
-
-            guard let rootfile = operation.xmlDocument["container", "rootfiles", "rootfile"] else {
-                self.updateState(.error(Error.invalidEPUB))
-                return
-            }
-
-            guard let opfPath = rootfile.attributes["full-path"] else {
-                self.updateState(.error(Error.invalidEPUB))
-                return
-            }
-
-            guard
-                let opfFileWrapper = self.epubFileWrapper[opfPath],
-                let opfData = opfFileWrapper.regularFileContents
-            else {
-                self.updateState(.error(Error.invalidEPUB))
-                return
-            }
-
-            self.mainQueue.async {
-                do {
-                    let operation = XMLParseOperation(data: opfData)
-                    operation.start()
-
-                    guard let opfMetadata = operation.xmlDocument["package", "metadata"] else {
-                        self.updateState(.error(Error.invalidEPUB))
-                        return
-                    }
-
-                    self.metadata = .init(metadataXMLElement: opfMetadata)
-
-                    guard let opfManifest = operation.xmlDocument["package", "manifest"] else {
-                        self.updateState(.error(Error.invalidEPUB))
-                        return
-                    }
-
-                    self.items = try Item.items(manifestXMLElement: opfManifest)
-
-                    guard let opfSpine = operation.xmlDocument["package", "spine"] else {
-                        self.updateState(.error(Error.invalidEPUB))
-                        return
-                    }
-
-                    self.spine = try .init(spineXMLElement: opfSpine)
-
-                    self.updateState(.closed)
-                } catch {
-                    self.updateState(.error(error))
-                }
             }
         }
     }
@@ -233,6 +181,24 @@ open class EPUB: ObservableObject {
     private func updateState(_ state: State) {
         DispatchQueue.main.async {
             self.state = state
+        }
+    }
+}
+
+extension EPUB {
+    enum FileHandler {
+        case zip(ZIP)
+        case fileWrapper(FileWrapper)
+    }
+}
+
+extension EPUB.FileHandler {
+    func loadFileData(filename: String) throws -> Data? {
+        switch self {
+        case .zip(let zip):
+            return try zip.loadFile(filename: filename).data
+        case .fileWrapper(let fileWrapper):
+            return fileWrapper[filename]?.regularFileContents
         }
     }
 }
