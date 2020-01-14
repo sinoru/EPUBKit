@@ -29,14 +29,18 @@ class ZIP {
         mz_zip_reader_delete(&zipReader)
     }
 
-    func loadFile(filename: String, caseSensitive: Bool = false) throws -> Item {
+    func loadFile(filename: String, caseSensitive: Bool = false) throws -> Item? {
         var error = MZ_OK
 
         let filenameCString = filename.cString(using: .utf8)
 
         error = mz_zip_reader_locate_entry(self.zipReader, filenameCString, caseSensitive ? 0 : 1)
         guard error == MZ_OK else {
-            throw ZIP.Error(code: error)
+            if error == MZ_END_OF_LIST {
+                return nil
+            } else {
+                throw ZIP.Error(code: error)
+            }
         }
 
         var file: UnsafeMutablePointer<mz_zip_file>?

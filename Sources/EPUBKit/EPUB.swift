@@ -201,7 +201,7 @@ extension EPUB.FileHandler {
     func loadFileData(filename: String) throws -> Data? {
         switch self {
         case .zip(let zip):
-            return try zip.loadFile(filename: filename).data
+            return try zip.loadFile(filename: filename)?.data
         case .fileWrapper(let fileWrapper):
             return fileWrapper[filename]?.regularFileContents
         }
