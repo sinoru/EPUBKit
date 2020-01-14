@@ -8,6 +8,7 @@
 import Foundation
 import Combine
 import XMLKit
+import SNFoundation
 
 let metaInfContainerFilename = "META-INF/container.xml"
 
