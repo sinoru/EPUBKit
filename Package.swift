@@ -14,6 +14,14 @@ let package = Package(
         .library(
             name: "EPUBKit",
             targets: ["EPUBKit"]),
+        .library(
+            name: "EPUBKitDynamic",
+            type: .dynamic,
+            targets: ["EPUBKit"]),
+        .library(
+            name: "EPUBKitStatic",
+            type: .static,
+            targets: ["EPUBKit"]),
     ],
     dependencies: [
         // Dependencies declare other packages that this package depends on.
