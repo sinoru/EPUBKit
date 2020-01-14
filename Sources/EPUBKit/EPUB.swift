@@ -151,9 +151,10 @@ open class EPUB: ObservableObject {
                 try zip.unarchiveItems(to: resourceURL)
                 DispatchQueue.main.async {
                     self.resourceURL = resourceURL
+                    self.mainQueue.async {
+                        completion?(.success(()))
+                    }
                 }
-                
-                completion?(.success(()))
             } catch {
                 self.updateState(.error(error))
                 completion?(.failure(error))
