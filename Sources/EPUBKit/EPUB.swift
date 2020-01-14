@@ -144,11 +144,14 @@ open class EPUB: ObservableObject {
 
         mainQueue.async {
             do {
+                let resourceURL = self.temporaryDirectoryFileURL
                 let zip = try ZIP(fileURL: self.epubFileURL)
 
-                try zip.unarchiveItems(to: self.temporaryDirectoryFileURL)
-
-                self.resourceURL = self.temporaryDirectoryFileURL
+                try zip.unarchiveItems(to: resourceURL)
+                DispatchQueue.main.async {
+                    self.resourceURL = resourceURL
+                }
+                
                 completion?(.success(()))
             } catch {
                 self.updateState(.error(error))
