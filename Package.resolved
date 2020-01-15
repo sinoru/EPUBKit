@@ -14,8 +14,8 @@
         "package": "SNFoundation",
         "repositoryURL": "https://github.com/sinoru/SNFoundation.swift.git",
         "state": {
-          "branch": "b86f6b5",
-          "revision": "b86f6b5c794666c78f9cf15abf2dfbdd193bfafe",
+          "branch": null,
+          "revision": "a88de38108d5bc06be02b57bc2707483907c5356",
           "version": null
         }
       }
