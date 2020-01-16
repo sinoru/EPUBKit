@@ -151,9 +151,9 @@ open class EPUB: ObservableObject {
                 let rootURL = self.temporaryDirectoryFileURL
                 let zip = try ZIP(fileURL: self.epubFileURL)
 
-                try zip.unarchiveItems(to: resourceURL)
+                try zip.unarchiveItems(to: rootURL)
                 DispatchQueue.main.async {
-                    self.resourceURL = rootURL.appendingPathComponent(opfFilePath).deletingLastPathComponent()
+                    self.resourceURL = rootURL.appendingPathComponent(self.opfFilePath).deletingLastPathComponent()
                     self.updateState(.normal)
                     self.mainQueue.async {
                         completion?(.success(()))
