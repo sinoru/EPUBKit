@@ -15,13 +15,13 @@ import WebKit
 extension EPUB {
     open class PageCoordinator: ObservableObject {
         private weak var epub: EPUB?
-        private lazy var queue: OperationQueue = {
-            let queue = OperationQueue()
+        private lazy var offscreenPrerenderOperationQueue: OperationQueue = {
+            let offscreenPrerenderOperationQueue = OperationQueue()
 
-            queue.underlyingQueue = epub?.mainQueue
-            queue.maxConcurrentOperationCount = 3
+            offscreenPrerenderOperationQueue.underlyingQueue = DispatchQueue.main // Operation contains UIView which should be called on main thread even dealloc
+            offscreenPrerenderOperationQueue.maxConcurrentOperationCount = 1
 
-            return queue
+            return offscreenPrerenderOperationQueue
         }()
 
         public var pageWidth: CGFloat = 0.0 {

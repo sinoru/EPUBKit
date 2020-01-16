@@ -41,15 +41,15 @@ extension EPUB.PageCoordinator {
         let request: WKWebView.Request
         let pageWidth: CGFloat
 
-        #if canImport(UIKit)
-        lazy var uiWindow: UIWindow = {
-            let window = UIWindow(frame: UIScreen.main.bounds)
-
-            window.windowLevel = .init(-.greatestFiniteMagnitude)
-
-            return window
-        }()
-        #endif
+//        #if canImport(UIKit)
+//        lazy var uiWindow: UIWindow = {
+//            let window = UIWindow(frame: UIScreen.main.bounds)
+//
+//            window.windowLevel = .init(-.greatestFiniteMagnitude)
+//
+//            return window
+//        }()
+//        #endif
 
         lazy var webView: WKWebView = {
             let configuration = WKWebViewConfiguration()
@@ -59,9 +59,9 @@ extension EPUB.PageCoordinator {
 
             webView.navigationDelegate = self
 
-            #if canImport(UIKit)
-            self.uiWindow.addSubview(webView)
-            #endif
+//            #if canImport(UIKit)
+//            self.uiWindow.addSubview(webView)
+//            #endif
 
             return webView
         }()
@@ -79,18 +79,14 @@ extension EPUB.PageCoordinator {
                 return
             }
 
-            DispatchQueue.main.async {
-                self.webView.frame.size.width = self.pageWidth
-                self.webView.load(self.request)
-                self.state = .executing
-            }
+            self.webView.frame.size.width = self.pageWidth
+            self.webView.load(self.request)
+            self.state = .executing
         }
 
         override func cancel() {
-            DispatchQueue.main.async {
-                self.webView.stopLoading()
-                self.state = .cancelled
-            }
+            self.webView.stopLoading()
+            self.state = .cancelled
         }
     }
 }
