@@ -38,7 +38,11 @@ open class EPUB: ObservableObject {
     @Published public private(set) var items: [Item]?
     @Published public private(set) var spine: Spine?
 
-    private lazy var mainQueue = DispatchQueue(label: "\(String(reflecting: Self.self)).\(Unmanaged.passUnretained(self).toOpaque()).main")
+    #if canImport(CoreGraphics) && canImport(WebKit)
+    public private(set) lazy var pageCoordinator = PageCoordinator(self)
+    #endif
+
+    lazy var mainQueue = DispatchQueue(label: "\(String(reflecting: Self.self)).\(Unmanaged.passUnretained(self).toOpaque()).main")
 
     public init(fileURL url: URL) throws {
         self.epubFileURL = url
@@ -139,6 +143,14 @@ open class EPUB: ObservableObject {
             return
         }
 
+        defer {
+            #if canImport(CoreGraphics) && canImport(WebKit)
+            self.mainQueue.async {
+                self.pageCoordinator.calculate()
+            }
+            #endif
+        }
+
         guard !epubFileWrapper.isDirectory else {
             resourceURL = epubFileURL
             self.updateState(.normal)
@@ -152,7 +164,7 @@ open class EPUB: ObservableObject {
                 let zip = try ZIP(fileURL: self.epubFileURL)
 
                 try zip.unarchiveItems(to: rootURL)
-                DispatchQueue.main.async {
+                DispatchQueue.main.sync {
                     self.resourceURL = rootURL.appendingPathComponent(self.opfFilePath).deletingLastPathComponent()
                     self.updateState(.normal)
                     self.mainQueue.async {

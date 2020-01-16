@@ -17,7 +17,7 @@ extension EPUB {
 }
 
 extension EPUB.Item {
-    public struct Ref: Identifiable {
+    public struct Ref: Identifiable, Hashable {
         public var id: String
     }
 }
