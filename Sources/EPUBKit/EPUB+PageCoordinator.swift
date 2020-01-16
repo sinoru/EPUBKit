@@ -36,9 +36,9 @@ extension EPUB {
             }
         }
 
-        private var spineItemHeightByWidth = [CGFloat: [Item.Ref: CGFloat]]()
+        private var spineItemHeightByWidth = [CGFloat: [Item.Ref: Result<CGFloat, Swift.Error>]]()
 
-        @Published public var spineItemHeights = [Item.Ref: CGFloat]()
+        @Published public var spineItemHeights = [Item.Ref: Result<CGFloat, Swift.Error>]()
         lazy private var spineItemHeightsSubscriber = $spineItemHeights
             .receive(on: epub?.mainQueue ?? DispatchQueue.main)
             .sink { [pageWidth = self.pageWidth](spineItemHeights) in
@@ -74,14 +74,14 @@ extension EPUB {
                     pageWidth: self.pageWidth
                 )
                 operation.completionBlock = { [weak operation]() in
-                    if case .finished(.success(let height)) = operation?.state {
-                        self.spineItemHeights[itemRef] = height
-                    } else {
-                        debugPrint(operation?.state)
+                    guard case .finished(let result) = operation?.state else {
+                        return
                     }
+
+                    self.spineItemHeights[itemRef] = result
                 }
 
-                queue.addOperation(operation)
+                offscreenPrerenderOperationQueue.addOperation(operation)
             }
         }
     }
