@@ -26,8 +26,9 @@ open class EPUB: ObservableObject {
     }()
 
     public let epubFileURL: URL
-
     private let epubFileWrapper: FileWrapper
+
+    private var opfFilePath: String = ""
 
     @Published public private(set) var state: State = .preflight
 
@@ -84,6 +85,8 @@ open class EPUB: ObservableObject {
                     self.updateState(.error(Error.invalidEPUB))
                     return
                 }
+
+                self.opfFilePath = metaInfOPFPath
 
                 guard let opfData = try fileHandler.loadFileData(filename: metaInfOPFPath) else {
                     self.updateState(.error(Error.invalidEPUB))
@@ -145,12 +148,12 @@ open class EPUB: ObservableObject {
 
         mainQueue.async {
             do {
-                let resourceURL = self.temporaryDirectoryFileURL
+                let rootURL = self.temporaryDirectoryFileURL
                 let zip = try ZIP(fileURL: self.epubFileURL)
 
                 try zip.unarchiveItems(to: resourceURL)
                 DispatchQueue.main.async {
-                    self.resourceURL = resourceURL
+                    self.resourceURL = rootURL.appendingPathComponent(opfFilePath).deletingLastPathComponent()
                     self.updateState(.normal)
                     self.mainQueue.async {
                         completion?(.success(()))
