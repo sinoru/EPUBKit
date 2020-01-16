@@ -151,6 +151,7 @@ open class EPUB: ObservableObject {
                 try zip.unarchiveItems(to: resourceURL)
                 DispatchQueue.main.async {
                     self.resourceURL = resourceURL
+                    self.updateState(.normal)
                     self.mainQueue.async {
                         completion?(.success(()))
                     }
@@ -177,6 +178,7 @@ open class EPUB: ObservableObject {
 
         do {
             try FileManager.default.removeItem(at: self.temporaryDirectoryFileURL)
+            self.updateState(.closed)
             completion?(.success(()))
         } catch {
             completion?(.failure(error))
