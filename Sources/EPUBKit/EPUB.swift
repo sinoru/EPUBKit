@@ -201,8 +201,8 @@ open class EPUB: ObservableObject {
     }
 
     private func updateState(_ state: State) {
-        DispatchQueue.main.async {
-            self.state = state
+        DispatchQueue.main.async { [weak self]() in
+            self?.state = state
         }
     }
 }
