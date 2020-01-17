@@ -44,6 +44,16 @@ extension EPUB.PageCoordinator {
         lazy var webView: WKWebView = {
             let configuration = WKWebViewConfiguration()
             configuration.processPool = Self.processPool
+            configuration.userContentController.add(self, name: "$")
+            configuration.userContentController.addUserScript(.init(
+                source: """
+                    window.addEventListener('load', (event) => {
+                        window.webkit.messageHandlers.$.postMessage(null)
+                    })
+                """,
+                injectionTime: .atDocumentStart,
+                forMainFrameOnly: true
+            ))
 
             let webView = WKWebView(frame: CGRect(origin: .zero, size: .init(width: 100, height: 100)), configuration: configuration)
 
@@ -85,8 +95,10 @@ extension EPUB.PageCoordinator.OffscreenPrerenderOperation: WKNavigationDelegate
     func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
         state = .finished(.failure(error))
     }
+}
 
-    func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+extension EPUB.PageCoordinator.OffscreenPrerenderOperation: WKScriptMessageHandler {
+    func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
         webView.evaluateJavaScript("document.body.scrollHeight") { (scrollHeight, error) in
             guard let scrollHeight = scrollHeight as? CGFloat else {
                 self.state = .finished(.failure(error!))
