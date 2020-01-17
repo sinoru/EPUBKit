@@ -11,13 +11,7 @@ import XMLKit
 extension EPUB {
     public struct Spine {
         public var ncxTOC: NCXTOC?
-        public var itemRefs: [ItemRef]
-    }
-}
-
-extension EPUB.Spine {
-    public struct ItemRef: Identifiable {
-        public var id: String
+        public var itemRefs: [Item.Ref]
     }
 }
 
