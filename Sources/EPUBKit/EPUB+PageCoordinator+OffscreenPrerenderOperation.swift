@@ -99,7 +99,7 @@ extension EPUB.PageCoordinator.OffscreenPrerenderOperation: WKNavigationDelegate
 
 extension EPUB.PageCoordinator.OffscreenPrerenderOperation: WKScriptMessageHandler {
     func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
-        webView.evaluateJavaScript("document.body.scrollHeight") { (scrollHeight, error) in
+        webView.evaluateJavaScript("document.body.scrollHeight") { [unowned self](scrollHeight, error) in
             guard let scrollHeight = scrollHeight as? CGFloat else {
                 self.state = .finished(.failure(error!))
                 return
