@@ -152,7 +152,7 @@ open class EPUB: ObservableObject {
         }
 
         guard !epubFileWrapper.isDirectory else {
-            resourceURL = epubFileURL
+            resourceURL = epubFileURL.appendingPathComponent(self.opfFilePath).deletingLastPathComponent()
             self.updateState(.normal)
             completion?(.success(()))
             return
