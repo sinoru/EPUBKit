@@ -26,7 +26,7 @@ let package = Package(
     dependencies: [
         // Dependencies declare other packages that this package depends on.
         // .package(url: /* package url */, from: "1.0.0"),
-        .package(url: "https://github.com/sinoru/SNFoundation.swift.git", .revision("d49ae091cde80ce7ec23a442c6ab323a27b13cc9")),
+        .package(url: "https://github.com/sinoru/SNFoundation.swift.git", .revision("291d1056e1e64288ce8d5e1e90efadff67b578d3")),
         .package(url: "https://github.com/sinoru/minizip.git", .revision("9f7e70eb")),
     ],
     targets: [

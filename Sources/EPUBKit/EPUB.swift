@@ -207,6 +207,18 @@ open class EPUB: ObservableObject {
     }
 }
 
+extension EPUB: Identifiable {
+    public var id: UUID {
+        return self.metadata?.bookID ?? UUID.empty
+    }
+}
+
+extension EPUB: Equatable {
+    public static func == (lhs: EPUB, rhs: EPUB) -> Bool {
+        return lhs.id == rhs.id
+    }
+}
+
 extension EPUB {
     enum FileHandler {
         case zip(ZIP)
