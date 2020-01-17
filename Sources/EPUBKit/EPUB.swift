@@ -146,7 +146,7 @@ open class EPUB: ObservableObject {
         defer {
             #if canImport(CoreGraphics) && canImport(WebKit)
             self.mainQueue.async {
-                self.pageCoordinator.calculate()
+                self.pageCoordinator.calculateSpineItemHeights()
             }
             #endif
         }

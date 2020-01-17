@@ -26,23 +26,22 @@ extension EPUB {
 
         public var pageWidth: CGFloat = 0.0 {
             didSet {
-                spineItemHeights = spineItemHeightByWidth[self.pageWidth] ?? [:]
+                spineItemHeights = spineItemHeightsByWidth[self.pageWidth] ?? [:]
                 spineItemHeightsSubscriber = $spineItemHeights
                     .receive(on: epub?.mainQueue ?? DispatchQueue.main)
                     .sink { [pageWidth = self.pageWidth](spineItemHeights) in
-                        self.spineItemHeightByWidth[pageWidth] = spineItemHeights
+                        self.spineItemHeightsByWidth[pageWidth] = spineItemHeights
                     }
-                calculate()
+                calculateSpineItemHeights()
             }
         }
 
-        private var spineItemHeightByWidth = [CGFloat: [Item.Ref: Result<CGFloat, Swift.Error>]]()
-
+        private var spineItemHeightsByWidth = [CGFloat: [Item.Ref: Result<CGFloat, Swift.Error>]]()
         @Published public var spineItemHeights = [Item.Ref: Result<CGFloat, Swift.Error>]()
         lazy private var spineItemHeightsSubscriber = $spineItemHeights
             .receive(on: epub?.mainQueue ?? DispatchQueue.main)
             .sink { [pageWidth = self.pageWidth](spineItemHeights) in
-                self.spineItemHeightByWidth[pageWidth] = spineItemHeights
+                self.spineItemHeightsByWidth[pageWidth] = spineItemHeights
             }
 
         init(_ epub: EPUB) {
@@ -50,40 +49,45 @@ extension EPUB {
             _ = spineItemHeightsSubscriber
         }
 
-        func calculate() {
-            guard
-                let epub = epub,
-                let resourceURL = epub.resourceURL,
-                let spine = epub.spine,
-                let items = epub.items
-            else {
+
+    }
+}
+
+extension EPUB.PageCoordinator {
+    func calculateSpineItemHeights() {
+        guard
+            let epub = epub,
+            let resourceURL = epub.resourceURL,
+            let spine = epub.spine,
+            let items = epub.items
+        else {
+            return
+        }
+
+        guard pageWidth > 0 else {
+            return
+        }
+
+        spine.itemRefs.forEach { (itemRef) in
+            guard let item = items[itemRef] else {
                 return
             }
 
-            guard pageWidth > 0 else {
-                return
-            }
-
-            spine.itemRefs.forEach { (itemRef) in
-                guard let item = items[itemRef] else {
+            let operation = OffscreenPrerenderOperation(
+                request: .fileURL(resourceURL.appendingPathComponent(item.relativePath), allowingReadAccessTo: resourceURL),
+                pageWidth: self.pageWidth
+            )
+            operation.completionBlock = { [weak operation]() in
+                guard case .finished(let result) = operation?.state else {
                     return
                 }
 
-                let operation = OffscreenPrerenderOperation(
-                    request: .fileURL(resourceURL.appendingPathComponent(item.relativePath), allowingReadAccessTo: resourceURL),
-                    pageWidth: self.pageWidth
-                )
-                operation.completionBlock = { [weak operation]() in
-                    guard case .finished(let result) = operation?.state else {
-                        return
-                    }
-
-                    self.spineItemHeights[itemRef] = result
-                }
-
-                offscreenPrerenderOperationQueue.addOperation(operation)
+                self.spineItemHeights[itemRef] = result
             }
+
+            offscreenPrerenderOperationQueue.addOperation(operation)
         }
     }
 }
+
 #endif
