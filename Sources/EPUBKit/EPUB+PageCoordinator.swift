@@ -40,13 +40,12 @@ extension EPUB {
         }
 
         open func spineItemHeightPublisherForRef(_ itemRef: Item.Ref) -> AnyPublisher<CGFloat, Swift.Error> {
-            return AnyPublisher(
-                $spineItemHeightCalculateResultsByWidth
-                    .compactMap({ $0[self.pageSize.width] })
-                    .compactMap({ $0[itemRef] })
-                    .tryMap({ try $0.get() })
-                    .removeDuplicates()
-            )
+            return $spineItemHeightCalculateResultsByWidth
+                .compactMap({ $0[self.pageSize.width] })
+                .compactMap({ $0[itemRef] })
+                .tryMap({ try $0.get() })
+                .removeDuplicates()
+                .eraseToAnyPublisher()
         }
 
         init(_ epub: EPUB) {

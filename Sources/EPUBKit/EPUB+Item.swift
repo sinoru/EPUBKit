@@ -18,22 +18,18 @@ extension EPUB {
 
 extension EPUB.Item {
     public struct Ref: Identifiable, Hashable {
-        public var id: String
+        public var id: EPUB.Item.ID
     }
 }
 
 extension EPUB.Item {
     static func items(manifestXMLElement: XMLKit.XMLElement) throws -> [Self] {
         return try manifestXMLElement.childeren.map {
-            guard let id = $0.attributes["id"] else {
-                throw EPUB.Error.invalidEPUB
-            }
-
-            guard let relativePath = $0.attributes["href"] else {
-                throw EPUB.Error.invalidEPUB
-            }
-
-            guard let mimeType = $0.attributes["media-type"] else {
+            guard
+                let id = $0.attributes["id"],
+                let relativePath = $0.attributes["href"],
+                let mimeType = $0.attributes["media-type"]
+            else {
                 throw EPUB.Error.invalidEPUB
             }
 
