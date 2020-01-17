@@ -41,16 +41,6 @@ extension EPUB.PageCoordinator {
         let request: WKWebView.Request
         let pageWidth: CGFloat
 
-//        #if canImport(UIKit)
-//        lazy var uiWindow: UIWindow = {
-//            let window = UIWindow(frame: UIScreen.main.bounds)
-//
-//            window.windowLevel = .init(-.greatestFiniteMagnitude)
-//
-//            return window
-//        }()
-//        #endif
-
         lazy var webView: WKWebView = {
             let configuration = WKWebViewConfiguration()
             configuration.processPool = Self.processPool
@@ -58,10 +48,6 @@ extension EPUB.PageCoordinator {
             let webView = WKWebView(frame: CGRect(origin: .zero, size: .init(width: 100, height: 100)), configuration: configuration)
 
             webView.navigationDelegate = self
-
-//            #if canImport(UIKit)
-//            self.uiWindow.addSubview(webView)
-//            #endif
 
             return webView
         }()
