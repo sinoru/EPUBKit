@@ -27,6 +27,7 @@ let package = Package(
         // Dependencies declare other packages that this package depends on.
         // .package(url: /* package url */, from: "1.0.0"),
         .package(url: "https://github.com/sinoru/SNFoundation.swift.git", .revision("291d1056e1e64288ce8d5e1e90efadff67b578d3")),
+        .package(url: "https://github.com/sinoru/Shinjuku.git", .revision("9870c26a60bbec70cc9900985672516c008b9a5a")),
         .package(url: "https://github.com/sinoru/minizip.git", .revision("9f7e70eb")),
     ],
     targets: [
@@ -34,7 +35,7 @@ let package = Package(
         // Targets can depend on other targets in this package, and on products in packages which this package depends on.
         .target(
             name: "EPUBKit",
-            dependencies: ["XMLKit", "SNFoundation", "minizip"]),
+            dependencies: ["XMLKit", "SNFoundation", "Shinjuku", "minizip"]),
         .testTarget(
             name: "EPUBKitTests",
             dependencies: ["EPUBKit"]),
