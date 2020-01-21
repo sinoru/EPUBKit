@@ -14,15 +14,6 @@ extension EPUB {
     class PageCoordinatorManager {
         unowned let epub: EPUB
 
-        lazy var offscreenPrerenderOperationQueue: OperationQueue = {
-            let offscreenPrerenderOperationQueue = OperationQueue()
-
-            offscreenPrerenderOperationQueue.underlyingQueue = DispatchQueue.main // Operation contains UIView which should be called on main thread even dealloc
-            offscreenPrerenderOperationQueue.maxConcurrentOperationCount = 1
-
-            return offscreenPrerenderOperationQueue
-        }()
-
         @Published var spineItemHeightCalculateResultsByWidth = [CGFloat: [Item.Ref: Result<CGFloat, Swift.Error>]]()
         @Published var pagePositionsBySize = [CGSize: Result<[PagePosition], Swift.Error>]()
 

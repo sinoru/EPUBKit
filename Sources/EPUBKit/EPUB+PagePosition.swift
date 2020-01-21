@@ -11,7 +11,6 @@ import CoreGraphics
 
 extension EPUB {
     public struct PagePosition: Equatable {
-        public weak var coordinator: EPUB.PageCoordinator?
         public var itemRef: EPUB.Item.Ref
 
         public var contentYOffset: CGFloat
@@ -23,7 +22,6 @@ extension EPUB {
 
 extension EPUB.PagePosition: Hashable {
     public func hash(into hasher: inout Hasher) {
-        hasher.combine(coordinator.flatMap { ObjectIdentifier($0) })
         hasher.combine(itemRef)
         hasher.combine(contentYOffset)
     }
@@ -33,7 +31,7 @@ extension Array where Element == EPUB.PagePosition {
     public func estimatedIndex(of element: Element) -> Int? {
         return lastIndex {
             guard
-                $0.coordinator === element.coordinator,
+                $0.pageSize == element.pageSize,
                 $0.itemRef == element.itemRef
             else {
                 return false

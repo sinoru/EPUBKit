@@ -27,6 +27,15 @@ extension EPUB {
         private var spineItemHeightCalculateResultsByWidthSubscriber: AnyCancellable?
         private var epubStateSubscriber: AnyCancellable?
 
+        lazy var offscreenPrerenderOperationQueue: OperationQueue = {
+            let offscreenPrerenderOperationQueue = OperationQueue()
+
+            offscreenPrerenderOperationQueue.underlyingQueue = DispatchQueue.main // Operation contains UIView which should be called on main thread even dealloc
+            offscreenPrerenderOperationQueue.maxConcurrentOperationCount = 2
+
+            return offscreenPrerenderOperationQueue
+        }()
+
         open var epub: EPUB {
             return pageCoordinatorManager.epub
         }
@@ -122,7 +131,7 @@ extension EPUB.PageCoordinator {
                     DispatchQueue.main.safeSync { self.pageCoordinatorManager[pageWidth: operation.pageWidth][itemRef] = result }
                 }
 
-                self.pageCoordinatorManager.offscreenPrerenderOperationQueue.addOperation(operation)
+                self.offscreenPrerenderOperationQueue.addOperation(operation)
             }
         }
     }
@@ -146,7 +155,6 @@ extension EPUB.PageCoordinator {
 
                         return (0..<Int(ceil(spineItemHeight / pageSize.height))).map {
                             return EPUB.PagePosition(
-                                coordinator: self,
                                 itemRef: itemRef,
                                 contentYOffset: CGFloat($0) * pageSize.height,
                                 contentSize: .init(width: pageSize.width, height: spineItemHeight),

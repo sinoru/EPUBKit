@@ -36,14 +36,11 @@ extension WKWebView {
 
 extension EPUB.PageCoordinator {
     class OffscreenPrerenderOperation: AsynchronousOperation<CGFloat, Swift.Error> {
-        private static let processPool = WKProcessPool()
-
         let request: WKWebView.Request
         let pageWidth: CGFloat
 
         lazy var webView: WKWebView = {
             let configuration = WKWebViewConfiguration()
-            configuration.processPool = Self.processPool
             configuration.userContentController.add(self, name: "$")
             configuration.userContentController.addUserScript(.init(
                 source: """
