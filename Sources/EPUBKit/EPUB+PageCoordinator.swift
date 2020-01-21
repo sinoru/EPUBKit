@@ -107,13 +107,12 @@ extension EPUB.PageCoordinator {
             return
         }
 
+        let pageSize = self.pageSize
+        guard pageSize.width > 0 else {
+            return
+        }
+
         epub.mainQueue.async {
-            let pageSize = self.pageSize
-
-            guard pageSize.width > 0 else {
-                return
-            }
-
             spine.itemRefs.forEach { (itemRef) in
                 guard let item = items[itemRef] else {
                     return
@@ -143,13 +142,13 @@ extension EPUB.PageCoordinator {
     }
 
     func calculatePagePositions() {
+        guard let spine = self.epub.spine else {
+            return
+        }
+
+        let pageSize = self.pageSize
+
         epub.mainQueue.async {
-            guard let spine = self.epub.spine else {
-                return
-            }
-
-            let pageSize = self.pageSize
-
             let pagePositionsResult: Result<[EPUB.PagePosition], Swift.Error> = {
                 do {
                     return .success(try spine.itemRefs.flatMap { (itemRef) -> [EPUB.PagePosition] in
