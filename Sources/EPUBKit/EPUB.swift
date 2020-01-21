@@ -30,16 +30,19 @@ open class EPUB: ObservableObject {
 
     private var opfFilePath: String = ""
 
-    @Published public private(set) var state: State = .preflight
+    @Published open private(set) var state: State = .preflight
 
-    @Published public private(set) var resourceURL: URL?
+    @Published open private(set) var resourceURL: URL?
 
-    @Published public private(set) var metadata: Metadata?
-    @Published public private(set) var items: [Item]?
-    @Published public private(set) var spine: Spine?
+    @Published open private(set) var metadata: Metadata?
+    @Published open private(set) var items: [Item]?
+    @Published open private(set) var spine: Spine?
 
     #if canImport(CoreGraphics) && canImport(WebKit)
-    public private(set) lazy var pageCoordinator = PageCoordinator(self)
+    private lazy var pageCoordinatorManager = PageCoordinatorManager(self)
+    open func newPageCoordinator() -> PageCoordinator {
+        pageCoordinatorManager.newPageCoordinator()
+    }
     #endif
 
     lazy var mainQueue = DispatchQueue(label: "\(String(reflecting: Self.self)).\(Unmanaged.passUnretained(self).toOpaque()).main")
@@ -141,14 +144,6 @@ open class EPUB: ObservableObject {
         guard case .closed = state else {
             completion?(.failure(Error.invalidState))
             return
-        }
-
-        defer {
-            #if canImport(CoreGraphics) && canImport(WebKit)
-            self.mainQueue.async {
-                self.pageCoordinator.calculateSpineItemHeights()
-            }
-            #endif
         }
 
         guard !epubFileWrapper.isDirectory else {

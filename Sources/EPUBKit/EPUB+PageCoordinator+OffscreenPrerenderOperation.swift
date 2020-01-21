@@ -34,6 +34,19 @@ extension WKWebView {
     }
 }
 
+private class _WKScriptMessageHandlerWrapper<Handler: WKScriptMessageHandler>: NSObject, WKScriptMessageHandler {
+    weak var handler: Handler?
+
+    init(_ handler: Handler) {
+        self.handler = handler
+    }
+
+    func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
+        handler?.userContentController(userContentController, didReceive: message)
+    }
+}
+
+
 extension EPUB.PageCoordinator {
     class OffscreenPrerenderOperation: AsynchronousOperation<CGFloat, Swift.Error> {
         private static let processPool = WKProcessPool()
@@ -41,30 +54,38 @@ extension EPUB.PageCoordinator {
         let request: WKWebView.Request
         let pageWidth: CGFloat
 
-//        #if canImport(UIKit)
-//        lazy var uiWindow: UIWindow = {
-//            let window = UIWindow(frame: UIScreen.main.bounds)
-//
-//            window.windowLevel = .init(-.greatestFiniteMagnitude)
-//
-//            return window
-//        }()
-//        #endif
-
         lazy var webView: WKWebView = {
             let configuration = WKWebViewConfiguration()
             configuration.processPool = Self.processPool
+            configuration.userContentController.add(_WKScriptMessageHandlerWrapper(self), name: "$")
+            configuration.userContentController.addUserScript(.init(
+                source: """
+                    window.addEventListener('load', (event) => {
+                        window.webkit.messageHandlers.$.postMessage(null)
+                    })
+                """,
+                injectionTime: .atDocumentStart,
+                forMainFrameOnly: true
+            ))
 
             let webView = WKWebView(frame: CGRect(origin: .zero, size: .init(width: 100, height: 100)), configuration: configuration)
 
             webView.navigationDelegate = self
 
-//            #if canImport(UIKit)
-//            self.uiWindow.addSubview(webView)
-//            #endif
-
             return webView
         }()
+
+        override var state: AsynchronousOperation<CGFloat, Error>.State? {
+            didSet {
+                switch state {
+                case .cancelled, .finished:
+                    webView.stopLoading()
+                    webView.navigationDelegate = nil
+                default:
+                    break
+                }
+            }
+        }
 
         init(request: WKWebView.Request, pageWidth: CGFloat) {
             self.request = request
@@ -99,15 +120,17 @@ extension EPUB.PageCoordinator.OffscreenPrerenderOperation: WKNavigationDelegate
     func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
         state = .finished(.failure(error))
     }
+}
 
-    func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
-        webView.evaluateJavaScript("document.body.scrollHeight") { (scrollHeight, error) in
+extension EPUB.PageCoordinator.OffscreenPrerenderOperation: WKScriptMessageHandler {
+    func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
+        webView.evaluateJavaScript("document.body.scrollHeight") { [weak self](scrollHeight, error) in
             guard let scrollHeight = scrollHeight as? CGFloat else {
-                self.state = .finished(.failure(error!))
+                self?.state = .finished(.failure(error!))
                 return
             }
 
-            self.state = .finished(.success(scrollHeight))
+            self?.state = .finished(.success(scrollHeight))
         }
     }
 }
