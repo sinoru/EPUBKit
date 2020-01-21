@@ -43,7 +43,7 @@ extension EPUB {
         @Published open var pageSize: CGSize = .zero {
             didSet {
                 if pageSize.width != oldValue.width {
-                    self.calculateSpineItemHeights()
+                    calculateSpineItemHeights()
                 }
             }
         }
@@ -63,12 +63,12 @@ extension EPUB {
         init(_ pageCoordinatorManager: PageCoordinatorManager) {
             self.pageCoordinatorManager = pageCoordinatorManager
             self.spineItemHeightCalculateResultsByWidthSubscriber = pageCoordinatorManager.$spineItemHeightCalculateResultsByWidth
-                .compactMap({ $0[self.pageSize.width] })
-                .sink(receiveValue: { (_) in
+                .compactMap({ [unowned self] in $0[self.pageSize.width] })
+                .sink(receiveValue: { [unowned self](_) in
                     self.calculatePagePositions()
                 })
             self.epubStateSubscriber = pageCoordinatorManager.epub.$state
-                .sink(receiveValue: { (state) in
+                .sink(receiveValue: { [unowned self](state) in
                     switch state {
                     case .normal:
                         self.calculateSpineItemHeights()
@@ -76,6 +76,10 @@ extension EPUB {
                         break
                     }
                 })
+        }
+
+        deinit {
+            offscreenPrerenderOperationQueue.cancelAllOperations()
         }
 
         open func spineItemHeightForRef(_ itemRef: Item.Ref) throws -> CGFloat? {
@@ -115,20 +119,22 @@ extension EPUB.PageCoordinator {
                     return
                 }
 
+                guard self.pageCoordinatorManager[pageWidth: pageSize.width][itemRef] == nil else {
+                    return
+                }
+
                 let operation = OffscreenPrerenderOperation(
                     request: .fileURL(resourceURL.appendingPathComponent(item.relativePath), allowingReadAccessTo: resourceURL),
                     pageWidth: self.pageSize.width
                 )
-                operation.completionBlock = { [weak operation]() in
-                    guard let operation = operation else {
-                        return
-                    }
+                operation.completionBlock = {
+                    DispatchQueue.main.async { [weak self] in // For dealloc operation in Main Thread
+                        guard case .finished(let result) = operation.state else {
+                            return
+                        }
 
-                    guard case .finished(let result) = operation.state else {
-                        return
+                        self?.pageCoordinatorManager[pageWidth: operation.pageWidth][itemRef] = result
                     }
-
-                    DispatchQueue.main.safeSync { self.pageCoordinatorManager[pageWidth: operation.pageWidth][itemRef] = result }
                 }
 
                 self.offscreenPrerenderOperationQueue.addOperation(operation)
