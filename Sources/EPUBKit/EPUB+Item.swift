@@ -9,16 +9,22 @@ import Foundation
 import XMLKit
 
 extension EPUB {
-    public struct Item: Identifiable {
-        public var id: String
+    public struct Item: Hashable {
+        public var ref: Ref
         public var relativePath: String
         public var mimeType: String
     }
 }
 
+extension EPUB.Item: Identifiable {
+    public var id: Ref.ID {
+        return ref.id
+    }
+}
+
 extension EPUB.Item {
     public struct Ref: Identifiable, Hashable {
-        public var id: EPUB.Item.ID
+        public var id: String
     }
 }
 
@@ -33,7 +39,7 @@ extension EPUB.Item {
                 throw EPUB.Error.invalidEPUB
             }
 
-            return .init(id: id, relativePath: relativePath, mimeType: mimeType)
+            return .init(ref: .init(id: id), relativePath: relativePath, mimeType: mimeType)
         }
     }
 }
