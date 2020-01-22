@@ -112,21 +112,21 @@ extension EPUB.PageCoordinator {
             return
         }
 
-        epub.mainQueue.async {
+        epub.mainQueue.async { [weak self, pageCoordinatorManager = self.pageCoordinatorManager] in
             epub.spine.itemRefs.forEach { (itemRef) in
                 guard let item = epub.items[itemRef] else {
                     return
                 }
 
-                guard self.pageCoordinatorManager[pageWidth: pageSize.width][itemRef] == nil else {
+                guard pageCoordinatorManager[pageWidth: pageSize.width][itemRef] == nil else {
                     return
                 }
 
                 let operation = OffscreenPrerenderOperation(
                     request: .fileURL(resourceURL.appendingPathComponent(item.relativePath), allowingReadAccessTo: resourceURL),
-                    pageWidth: self.pageSize.width
+                    pageWidth: pageSize.width
                 )
-                operation.completionBlock = { [pageCoordinatorManager = self.pageCoordinatorManager] in
+                operation.completionBlock = {
                     DispatchQueue.main.async { // For dealloc operation in Main Thread
                         guard case .finished(let result) = operation.state else {
                             return
@@ -136,7 +136,7 @@ extension EPUB.PageCoordinator {
                     }
                 }
 
-                self.offscreenPrerenderOperationQueue.addOperation(operation)
+                self?.offscreenPrerenderOperationQueue.addOperation(operation)
             }
         }
     }
@@ -145,11 +145,11 @@ extension EPUB.PageCoordinator {
         let epub = self.epub
         let pageSize = self.pageSize
 
-        epub.mainQueue.async {
+        epub.mainQueue.async { [pageCoordinatorManager = self.pageCoordinatorManager] in
             let pagePositionsResult: Result<[EPUB.PagePosition], Swift.Error> = {
                 do {
                     return .success(try epub.spine.itemRefs.flatMap { (itemRef) -> [EPUB.PagePosition] in
-                        guard let spineItemHeightResult = self.pageCoordinatorManager.spineItemHeightCalculateResultsByWidth[pageSize.width]?[itemRef] else {
+                        guard let spineItemHeightResult = pageCoordinatorManager.spineItemHeightCalculateResultsByWidth[pageSize.width]?[itemRef] else {
                             return []
                         }
 
@@ -170,7 +170,7 @@ extension EPUB.PageCoordinator {
                 }
             }()
 
-            DispatchQueue.main.async { [pageCoordinatorManager = self.pageCoordinatorManager] in
+            DispatchQueue.main.async {
                 pageCoordinatorManager.pagePositionsBySize[pageSize] = pagePositionsResult
             }
         }
