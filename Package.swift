@@ -26,7 +26,7 @@ let package = Package(
     dependencies: [
         // Dependencies declare other packages that this package depends on.
         // .package(url: /* package url */, from: "1.0.0"),
-        .package(url: "https://github.com/sinoru/SNFoundation.swift.git", .revision("a19d1627ed46ac123fcd79d187f47cb589b96a02")),
+        .package(url: "https://github.com/sinoru/SNFoundation.swift.git", .revision("c3d299c227479b7d0c9e26599662d95066f9f5e5")),
         .package(url: "https://github.com/sinoru/Shinjuku.git", .revision("9870c26a60bbec70cc9900985672516c008b9a5a")),
         .package(url: "https://github.com/sinoru/CMinizip.swift.git", .upToNextMajor(from: "2.9.1")),
     ],

@@ -126,13 +126,13 @@ extension EPUB.PageCoordinator {
                     request: .fileURL(resourceURL.appendingPathComponent(item.relativePath), allowingReadAccessTo: resourceURL),
                     pageWidth: self.pageSize.width
                 )
-                operation.completionBlock = {
-                    DispatchQueue.main.async { [weak self] in // For dealloc operation in Main Thread
+                operation.completionBlock = { [pageCoordinatorManager = self.pageCoordinatorManager] in
+                    DispatchQueue.main.async { // For dealloc operation in Main Thread
                         guard case .finished(let result) = operation.state else {
                             return
                         }
 
-                        self?.pageCoordinatorManager[pageWidth: operation.pageWidth][itemRef] = result
+                        pageCoordinatorManager[pageWidth: operation.pageWidth][itemRef] = result
                     }
                 }
 

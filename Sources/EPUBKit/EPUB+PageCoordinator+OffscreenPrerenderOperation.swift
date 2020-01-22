@@ -34,19 +34,6 @@ extension WKWebView {
     }
 }
 
-private class _WKScriptMessageHandlerWrapper<Handler: WKScriptMessageHandler>: NSObject, WKScriptMessageHandler {
-    weak var handler: Handler?
-
-    init(_ handler: Handler) {
-        self.handler = handler
-    }
-
-    func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
-        handler?.userContentController(userContentController, didReceive: message)
-    }
-}
-
-
 extension EPUB.PageCoordinator {
     class OffscreenPrerenderOperation: AsynchronousOperation<CGFloat, Swift.Error> {
         private static let processPool = WKProcessPool()
@@ -57,7 +44,7 @@ extension EPUB.PageCoordinator {
         lazy var webView: WKWebView = {
             let configuration = WKWebViewConfiguration()
             configuration.processPool = Self.processPool
-            configuration.userContentController.add(_WKScriptMessageHandlerWrapper(self), name: "$")
+            configuration.userContentController.add(self.weakScriptMessageHandler, name: "$")
             configuration.userContentController.addUserScript(.init(
                 source: """
                     window.addEventListener('load', (event) => {
