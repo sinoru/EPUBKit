@@ -44,8 +44,11 @@ extension EPUB.PageCoordinator {
         lazy var webView: WKWebView = {
             let configuration = WKWebViewConfiguration()
             configuration.processPool = Self.processPool
-            configuration.userContentController.add(self.weakScriptMessageHandler, name: "$")
-            configuration.userContentController.addUserScript(.init(
+
+            let webView = WKWebView(frame: CGRect(origin: .zero, size: .init(width: 100, height: 100)), configuration: configuration)
+
+            webView.configuration.userContentController.add(self.weakScriptMessageHandler, name: "$")
+            webView.configuration.userContentController.addUserScript(.init(
                 source: """
                     window.addEventListener('load', (event) => {
                         window.webkit.messageHandlers.$.postMessage(null)
@@ -54,9 +57,6 @@ extension EPUB.PageCoordinator {
                 injectionTime: .atDocumentStart,
                 forMainFrameOnly: true
             ))
-
-            let webView = WKWebView(frame: CGRect(origin: .zero, size: .init(width: 100, height: 100)), configuration: configuration)
-
             webView.navigationDelegate = self
 
             return webView
@@ -80,6 +80,10 @@ extension EPUB.PageCoordinator {
             super.init()
 
             self.state = .ready
+        }
+
+        deinit {
+            webView.configuration.userContentController.removeScriptMessageHandler(forName: "$")
         }
 
         override func start() {
