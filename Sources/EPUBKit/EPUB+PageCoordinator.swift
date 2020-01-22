@@ -170,8 +170,8 @@ extension EPUB.PageCoordinator {
                 }
             }()
 
-            DispatchQueue.main.async {
-                self.pageCoordinatorManager.pagePositionsBySize[pageSize] = pagePositionsResult
+            DispatchQueue.main.async { [pageCoordinatorManager = self.pageCoordinatorManager] in
+                pageCoordinatorManager.pagePositionsBySize[pageSize] = pagePositionsResult
             }
         }
     }
