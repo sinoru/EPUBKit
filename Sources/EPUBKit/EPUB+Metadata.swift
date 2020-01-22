@@ -11,7 +11,7 @@ import XMLKit
 
 extension EPUB {
     public struct Metadata {
-        public var bookID: UUID
+        public var bookID: UUID = .empty
         public var title: String?
         public var creator: String?
     }

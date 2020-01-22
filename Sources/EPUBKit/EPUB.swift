@@ -34,9 +34,9 @@ open class EPUB: ObservableObject {
 
     @Published open private(set) var resourceURL: URL?
 
-    @Published open private(set) var metadata: Metadata?
-    @Published open private(set) var items: [Item]?
-    @Published open private(set) var spine: Spine?
+    @Published open private(set) var metadata: Metadata = .init()
+    @Published open private(set) var items: [Item] = []
+    @Published open private(set) var spine: Spine = .init()
 
     #if canImport(CoreGraphics) && canImport(WebKit)
     private lazy var pageCoordinatorManager = PageCoordinatorManager(self)
@@ -204,7 +204,7 @@ open class EPUB: ObservableObject {
 
 extension EPUB: Identifiable {
     public var id: UUID {
-        return self.metadata?.bookID ?? UUID.empty
+        return self.metadata.bookID
     }
 }
 
