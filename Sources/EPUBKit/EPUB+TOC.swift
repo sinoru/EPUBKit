@@ -28,10 +28,10 @@ extension EPUB.TOC {
 
 extension EPUB.TOC {
     public struct Item {
-        var name: String
-        var contentURL: URL
-        var playOrder: Int
-        var children: [Item]
+        public var name: String
+        public var contentURL: URL
+        public var playOrder: Int
+        public var children: [Item]
     }
 }
 
@@ -59,15 +59,15 @@ extension EPUB.TOC.Item {
 }
 
 extension EPUB.TOC {
-    public func flattenItems() -> [(depth: Int, element: Item)] {
-        items._flatten(0)
+    public func flattenKeyPaths() -> [(depth: Int, playOrder: Int, keyPath: KeyPath<EPUB.TOC, EPUB.TOC.Item>)] {
+        items._flatten(depth: 0, keyPath: \.items)
     }
 }
 
 extension Array where Element == EPUB.TOC.Item {
-    fileprivate func _flatten(_ depth: Int) -> [(depth: Int, element: Element)] {
-        flatMap {
-            [(depth: depth, element: .init(name: $0.name, contentURL: $0.contentURL, playOrder: $0.playOrder, children: []))] + $0.children._flatten(depth + 1)
+    fileprivate func _flatten(depth: Int, keyPath: KeyPath<EPUB.TOC, [EPUB.TOC.Item]>) -> [(depth: Int, playOrder: Int, keyPath: KeyPath<EPUB.TOC, EPUB.TOC.Item>)] {
+        enumerated().flatMap {
+            [(depth: depth, playOrder: $1.playOrder, keyPath: keyPath.appending(path: \.[$0]))] + $1.children._flatten(depth: depth, keyPath: keyPath.appending(path: \.[$0].children))
         }
     }
 }
