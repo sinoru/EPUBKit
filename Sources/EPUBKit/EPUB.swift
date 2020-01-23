@@ -268,6 +268,7 @@ extension EPUB {
 
 extension EPUB {
     public enum Error: Swift.Error {
+        case unknown
         case invalidEPUB
         case invalidState
     }

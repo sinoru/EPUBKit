@@ -13,8 +13,8 @@ extension EPUB {
     public struct PagePosition: Equatable {
         public var itemRef: EPUB.Item.Ref
 
+        public var itemContentInfo: ItemContentInfo?
         public var contentYOffset: CGFloat
-        public var contentSize: CGSize
 
         public var pageSize: CGSize
     }
@@ -38,6 +38,18 @@ extension Array where Element == EPUB.PagePosition {
             }
 
             return $0.contentYOffset <= element.contentYOffset
+        }
+    }
+
+    subscript(itemRef: EPUB.Item.Ref, contentYOffset: CGFloat) -> Element? {
+        return last {
+            guard
+                $0.itemRef == itemRef
+            else {
+                return false
+            }
+
+            return $0.contentYOffset <= contentYOffset
         }
     }
 }

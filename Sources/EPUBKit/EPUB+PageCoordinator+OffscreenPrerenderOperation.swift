@@ -12,7 +12,7 @@ import CoreGraphics
 import WebKit
 
 extension EPUB.PageCoordinator {
-    class OffscreenPrerenderOperation: AsynchronousOperation<CGFloat, Swift.Error> {
+    class OffscreenPrerenderOperation: AsynchronousOperation<EPUB.ItemContentInfo, Swift.Error> {
         private static let processPool = WKProcessPool()
 
         let request: WKWebView.Request
@@ -39,7 +39,7 @@ extension EPUB.PageCoordinator {
             return webView
         }()
 
-        override var state: AsynchronousOperation<CGFloat, Error>.State? {
+        override var state: AsynchronousOperation<EPUB.ItemContentInfo, Error>.State? {
             didSet {
                 switch state {
                 case .cancelled, .finished:
@@ -92,13 +92,37 @@ extension EPUB.PageCoordinator.OffscreenPrerenderOperation: WKNavigationDelegate
 
 extension EPUB.PageCoordinator.OffscreenPrerenderOperation: WKScriptMessageHandler {
     func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
-        webView.evaluateJavaScript("document.body.scrollHeight") { [weak self](scrollHeight, error) in
-            guard let scrollHeight = scrollHeight as? CGFloat else {
-                self?.state = .finished(.failure(error!))
-                return
-            }
+        webView.evaluateJavaScript("""
+        new Object({
+            scrollWidth: document.body.scrollWidth,
+            scrollHeight: document.body.scrollHeight,
+            contentYOffsetsByID: Array.from(document.querySelectorAll('*[id]')).reduce((r, v) => { return {...r, [v.id]: v.getBoundingClientRect().y }}, {})
+        })
+        """) { [weak self](result, error) in
+            do {
+                guard let result = result as? [String: Any] else {
+                    throw error ?? EPUB.Error.unknown
+                }
 
-            self?.state = .finished(.success(scrollHeight))
+                guard let scrollWidth = result["scrollWidth"] as? Double else {
+                    throw EPUB.Error.unknown
+                }
+
+                guard let scrollHeight = result["scrollHeight"] as? Double else {
+                    throw EPUB.Error.unknown
+                }
+
+                guard let contentYOffsetsByID = result["contentYOffsetsByID"] as? [String: Double] else {
+                    throw EPUB.Error.unknown
+                }
+
+                self?.state = .finished(.success(.init(
+                    contentSize: CGSize(width: scrollWidth, height: scrollHeight),
+                    contentYOffsetsByID: contentYOffsetsByID.mapValues({ CGFloat($0) })
+                )))
+            } catch {
+                self?.state = .finished(.failure(error))
+            }
         }
     }
 }
