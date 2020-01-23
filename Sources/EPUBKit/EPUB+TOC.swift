@@ -57,3 +57,17 @@ extension EPUB.TOC.Item {
             .map { try EPUB.TOC.Item(navPointXMLElement: $0) }
     }
 }
+
+extension EPUB.TOC {
+    public func flattenItems() -> [(depth: Int, element: Item)] {
+        items._flatten(0)
+    }
+}
+
+extension Array where Element == EPUB.TOC.Item {
+    fileprivate func _flatten(_ depth: Int) -> [(depth: Int, element: Element)] {
+        flatMap {
+            [(depth: depth, element: .init(name: $0.name, contentURL: $0.contentURL, playOrder: $0.playOrder, children: []))] + $0.children._flatten(depth + 1)
+        }
+    }
+}
