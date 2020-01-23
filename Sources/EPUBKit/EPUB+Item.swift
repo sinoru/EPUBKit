@@ -11,7 +11,7 @@ import XMLKit
 extension EPUB {
     public struct Item: Hashable {
         public var ref: Ref
-        public var relativePath: String
+        public var url: URL
         public var mimeType: String
     }
 }
@@ -33,13 +33,13 @@ extension EPUB.Item {
         return try manifestXMLElement.childeren.map {
             guard
                 let id = $0.attributes["id"],
-                let relativePath = $0.attributes["href"],
+                let url = $0.attributes["href"].flatMap({ URL(string: $0) }),
                 let mimeType = $0.attributes["media-type"]
             else {
                 throw EPUB.Error.invalidEPUB
             }
 
-            return .init(ref: .init(id: id), relativePath: relativePath, mimeType: mimeType)
+            return .init(ref: .init(id: id), url: url, mimeType: mimeType)
         }
     }
 }

@@ -29,7 +29,7 @@ extension EPUB.TOC {
 extension EPUB.TOC {
     public struct Item {
         public var name: String
-        public var contentURL: URL
+        public var epubItemURL: URL
         public var playOrder: Int
         public var children: [Item]
     }
@@ -42,10 +42,10 @@ extension EPUB.TOC.Item {
         }
         self.name = name
 
-        guard let contentURL = navPointXMLElement["content"].flatMap({ $0.attributes["src"] }).flatMap({ URL(string: $0) }) else {
+        guard let epubItemURL = navPointXMLElement["content"].flatMap({ $0.attributes["src"] }).flatMap({ URL(string: $0) }) else {
             throw EPUB.Error.invalidEPUB
         }
-        self.contentURL = contentURL
+        self.epubItemURL = epubItemURL
 
         guard let playOrder = navPointXMLElement.attributes["playOrder"].flatMap({ Int($0) }) else {
             throw EPUB.Error.invalidEPUB

@@ -138,10 +138,10 @@ open class EPUB: ObservableObject {
 
                 try spine.tocItemID
                     .flatMap {
-                        items[$0]?.relativePath
+                        items[$0]?.url
                     }
                     .flatMap {
-                        URL(fileURLWithPath: metaInfOPFPath).deletingLastPathComponent().appendingPathComponent($0).relativePath
+                        URL(fileURLWithPath: metaInfOPFPath).deletingLastPathComponent().appendingPathComponent($0.relativePath).relativePath
                     }
                     .flatMap {
                         guard let ncxData = try fileHandler.loadFileData(filename: $0) else {

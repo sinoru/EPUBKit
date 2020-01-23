@@ -125,7 +125,7 @@ extension EPUB.PageCoordinator {
                 }
 
                 let operation = OffscreenPrerenderOperation(
-                    request: .fileURL(resourceURL.appendingPathComponent(item.relativePath), allowingReadAccessTo: resourceURL),
+                    request: .fileURL(resourceURL.appendingPathComponent(item.url.relativePath), allowingReadAccessTo: resourceURL),
                     pageWidth: pageSize.width
                 )
                 operation.completionBlock = {
