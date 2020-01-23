@@ -67,7 +67,7 @@ extension EPUB.TOC {
 extension Array where Element == EPUB.TOC.Item {
     fileprivate func _flatten(depth: Int, keyPath: KeyPath<EPUB.TOC, [EPUB.TOC.Item]>) -> [(depth: Int, playOrder: Int, keyPath: KeyPath<EPUB.TOC, EPUB.TOC.Item>)] {
         enumerated().flatMap {
-            [(depth: depth, playOrder: $1.playOrder, keyPath: keyPath.appending(path: \.[$0]))] + $1.children._flatten(depth: depth, keyPath: keyPath.appending(path: \.[$0].children))
+            [(depth: depth, playOrder: $1.playOrder, keyPath: keyPath.appending(path: \.[$0]))] + $1.children._flatten(depth: depth + 1, keyPath: keyPath.appending(path: \.[$0].children))
         }
     }
 }
