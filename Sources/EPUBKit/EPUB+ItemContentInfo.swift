@@ -10,8 +10,8 @@ import CoreGraphics
 
 extension EPUB {
     public struct ItemContentInfo: Equatable, Hashable {
-        var contentSize: CGSize
-        var contentYOffsetsByID: [String: CGFloat]
+        public var contentSize: CGSize
+        public var contentYOffsetsByID: [String: CGFloat]
     }
 }
 #endif
