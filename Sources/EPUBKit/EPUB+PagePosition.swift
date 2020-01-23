@@ -13,10 +13,17 @@ extension EPUB {
     public struct PagePosition: Equatable {
         public var itemRef: EPUB.Item.Ref
 
-        public var itemContentInfo: ItemContentInfo?
+        public var contentInfo: ContentInfo?
         public var contentYOffset: CGFloat
 
         public var pageSize: CGSize
+    }
+}
+
+extension EPUB.PagePosition {
+    public struct ContentInfo: Equatable, Hashable {
+        public var contentSize: CGSize
+        public var contentYOffsetsByID: [String: CGFloat]
     }
 }
 

@@ -158,14 +158,18 @@ extension EPUB.PageCoordinator {
                         let itemContentInfo = try itemContentInfoResult.get()
 
                         return (0..<Int(ceil(itemContentInfo.contentSize.height / pageSize.height))).map {
+                            let pageContentYOffset = CGFloat($0) * pageSize.height
+                            let pageSize = CGSize(width: pageSize.width, height: min(pageSize.height, itemContentInfo.contentSize.height - pageContentYOffset))
+
+                            let pageContentYOffsetsByID = itemContentInfo.contentYOffsetsByID.filter({ (pageContentYOffset...(pageContentYOffset + pageSize.height)) ~= $0.value })
+
                             return EPUB.PagePosition(
                                 itemRef: itemRef,
-                                itemContentInfo: itemContentInfo,
-                                contentYOffset: CGFloat($0) * pageSize.height,
-                                pageSize: .init(width: pageSize.width, height: min(pageSize.height, itemContentInfo.contentSize.height - (CGFloat($0) * pageSize.height)))
+                                contentInfo: .init(contentSize: itemContentInfo.contentSize, contentYOffsetsByID: pageContentYOffsetsByID),
+                                contentYOffset: pageContentYOffset,
+                                pageSize: pageSize
                             )
                         }
-
                     })
                 } catch {
                     return .failure(error)

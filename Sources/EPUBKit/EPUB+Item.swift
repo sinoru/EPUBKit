@@ -54,6 +54,6 @@ extension Array where Element == EPUB.Item {
     }
 
     public subscript(_ url: URL) -> Element? {
-        first(where: { $0.url == url })
+        first(where: { $0.url.path == url.path })
     }
 }
