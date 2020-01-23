@@ -52,4 +52,8 @@ extension Array where Element == EPUB.Item {
     public subscript(_ id: Element.Ref.ID) -> Element? {
         first(where: { $0.id == id })
     }
+
+    public subscript(_ url: URL) -> Element? {
+        first(where: { $0.url == url })
+    }
 }
