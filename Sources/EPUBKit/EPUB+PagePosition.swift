@@ -13,7 +13,7 @@ extension EPUB {
     public struct PagePosition: Equatable {
         public var itemRef: EPUB.Item.Ref
 
-        public var contentInfo: ContentInfo?
+        public var contentInfo: ContentInfo
         public var contentYOffset: CGFloat
 
         public var pageSize: CGSize
