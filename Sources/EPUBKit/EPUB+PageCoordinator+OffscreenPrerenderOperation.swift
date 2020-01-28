@@ -22,7 +22,7 @@ extension EPUB.PageCoordinator {
             let configuration = WKWebViewConfiguration()
             configuration.processPool = Self.processPool
 
-            let webView = WKWebView(frame: CGRect(origin: .zero, size: .init(width: 100, height: 100)), configuration: configuration)
+            let webView = WKWebView(frame: .zero, configuration: configuration)
 
             webView.configuration.userContentController.add(self.weakScriptMessageHandler, name: "$")
             webView.configuration.userContentController.addUserScript(.init(
@@ -68,7 +68,7 @@ extension EPUB.PageCoordinator {
                 return
             }
 
-            self.webView.frame.size.width = self.pageWidth
+            self.webView.frame.size = CGSize(width: self.pageWidth, height: .greatestFiniteMagnitude)
             self.webView.load(self.request)
             self.state = .executing
         }
