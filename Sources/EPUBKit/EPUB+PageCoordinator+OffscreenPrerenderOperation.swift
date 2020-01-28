@@ -64,13 +64,17 @@ extension EPUB.PageCoordinator {
         }
 
         override func start() {
-            guard case .ready = state else {
-                return
+            switch state {
+            case .ready:
+                self.webView.frame.size = CGSize(width: self.pageWidth, height: .greatestFiniteMagnitude)
+                self.webView.load(self.request)
+                self.state = .executing
+            case .cancelled:
+                self.state = .executing
+                self.state = .cancelled
+            default:
+                break
             }
-
-            self.webView.frame.size = CGSize(width: self.pageWidth, height: .greatestFiniteMagnitude)
-            self.webView.load(self.request)
-            self.state = .executing
         }
 
         override func cancel() {

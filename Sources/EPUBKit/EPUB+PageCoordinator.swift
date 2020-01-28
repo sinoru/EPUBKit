@@ -119,6 +119,10 @@ extension EPUB.PageCoordinator {
         }
 
         epub.mainQueue.async { [weak self, pageCoordinatorManager = self.pageCoordinatorManager] in
+            DispatchQueue.main.async { // For cancel operation in Main Thread
+                self?.offscreenPrerenderOperationQueue.cancelAllOperations()
+            }
+
             epub.spine.itemRefs.forEach { (itemRef) in
                 guard let item = epub.items[itemRef] else {
                     return
@@ -142,8 +146,10 @@ extension EPUB.PageCoordinator {
                     }
                 }
 
-                self?.offscreenPrerenderOperationQueue.progress.totalUnitCount += 1
-                self?.offscreenPrerenderOperationQueue.addOperation(operation)
+                DispatchQueue.main.async {
+                    self?.offscreenPrerenderOperationQueue.progress.totalUnitCount += 1
+                    self?.offscreenPrerenderOperationQueue.addOperation(operation)
+                }
             }
         }
     }
