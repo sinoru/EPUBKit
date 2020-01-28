@@ -67,6 +67,10 @@ extension EPUB {
                 .eraseToAnyPublisher()
         }
 
+        open var progress: Progress {
+            offscreenPrerenderOperationQueue.progress
+        }
+
         private var itemContentInfoResultsSubscription: AnyCancellable?
         private var spineItemHeightCalculateResultsByWidthSubscriber: AnyCancellable?
         private var epubStateSubscriber: AnyCancellable?
@@ -138,6 +142,7 @@ extension EPUB.PageCoordinator {
                     }
                 }
 
+                self?.offscreenPrerenderOperationQueue.progress.totalUnitCount += 1
                 self?.offscreenPrerenderOperationQueue.addOperation(operation)
             }
         }
