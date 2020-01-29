@@ -27,8 +27,8 @@ extension EPUB {
         lazy var offscreenPrerenderOperationQueue: OperationQueue = {
             let offscreenPrerenderOperationQueue = OperationQueue()
 
-            offscreenPrerenderOperationQueue.underlyingQueue = DispatchQueue.main // Operation contains UIView which should be called on main thread even dealloc
-            offscreenPrerenderOperationQueue.maxConcurrentOperationCount = 2
+            offscreenPrerenderOperationQueue.underlyingQueue = mainQueue
+            offscreenPrerenderOperationQueue.maxConcurrentOperationCount = 1
 
             return offscreenPrerenderOperationQueue
         }()
@@ -51,9 +51,9 @@ extension EPUB {
 
         open var pagePositionsPublisher: AnyPublisher<[PagePosition], Swift.Error> {
             pageCoordinatorManager.$pagePositionsBySize
+                .receive(on: mainQueue)
                 .compactMap { $0[self.pageSize] }
                 .tryMap { try $0.get() }
-                .removeDuplicates()
                 .eraseToAnyPublisher()
         }
 
@@ -63,6 +63,7 @@ extension EPUB {
 
         open var itemContentInfoResultsPublisher: AnyPublisher<[Item.Ref: Result<ItemContentInfo, Swift.Error>], Never> {
             pageCoordinatorManager.$itemContentInfoResultsByWidth
+                .receive(on: mainQueue)
                 .compactMap { $0[self.pageSize.width] }
                 .eraseToAnyPublisher()
         }
@@ -75,14 +76,20 @@ extension EPUB {
         private var spineItemHeightCalculateResultsByWidthSubscriber: AnyCancellable?
         private var epubStateSubscriber: AnyCancellable?
 
+        lazy var mainQueue = DispatchQueue(
+            label: "\(String(reflecting: Self.self)).\(Unmanaged.passUnretained(self).toOpaque()).main", target: epub.mainQueue
+        )
+
         init(_ pageCoordinatorManager: PageCoordinatorManager) {
             self.pageCoordinatorManager = pageCoordinatorManager
             self.itemContentInfoResultsSubscription = pageCoordinatorManager.$itemContentInfoResultsByWidth
+                .receive(on: mainQueue)
                 .compactMap { [unowned self] in $0[self.pageSize.width] }
                 .sink(receiveValue: { [unowned self](_) in
                     self.calculatePagePositions()
                 })
             self.epubStateSubscriber = pageCoordinatorManager.epub.$state
+                .receive(on: mainQueue)
                 .sink(receiveValue: { [unowned self](state) in
                     switch state {
                     case .normal:
@@ -118,7 +125,7 @@ extension EPUB.PageCoordinator {
             return
         }
 
-        epub.mainQueue.async { [weak self, pageCoordinatorManager = self.pageCoordinatorManager] in
+        mainQueue.async { [weak self, pageCoordinatorManager = self.pageCoordinatorManager] in
             DispatchQueue.main.async { // For cancel operation in Main Thread
                 self?.offscreenPrerenderOperationQueue.cancelAllOperations()
             }
@@ -158,30 +165,32 @@ extension EPUB.PageCoordinator {
         let epub = self.epub
         let pageSize = self.pageSize
 
-        epub.mainQueue.async { [pageCoordinatorManager = self.pageCoordinatorManager] in
+        mainQueue.async { [pageCoordinatorManager = self.pageCoordinatorManager] in
             let pagePositionsResult: Result<[EPUB.PagePosition], Swift.Error> = {
                 do {
-                    return .success(try epub.spine.itemRefs.flatMap { (itemRef) -> [EPUB.PagePosition] in
-                        guard let itemContentInfoResult = pageCoordinatorManager.itemContentInfoResultsByWidth[pageSize.width]?[itemRef] else {
-                            return []
+                    return .success(
+                        try epub.spine.itemRefs.flatMap { (itemRef) -> [EPUB.PagePosition] in
+                            guard let itemContentInfoResult = pageCoordinatorManager.itemContentInfoResultsByWidth[pageSize.width]?[itemRef] else {
+                                return []
+                            }
+
+                            let itemContentInfo = try itemContentInfoResult.get()
+
+                            return (0..<Int(ceil(itemContentInfo.contentSize.height / pageSize.height))).map {
+                                let pageContentYOffset = CGFloat($0) * pageSize.height
+                                let pageSize = CGSize(width: pageSize.width, height: min(pageSize.height, itemContentInfo.contentSize.height - pageContentYOffset))
+
+                                let pageContentYOffsetsByID = itemContentInfo.contentYOffsetsByID.filter({ (pageContentYOffset...(pageContentYOffset + pageSize.height)) ~= $0.value })
+
+                                return EPUB.PagePosition(
+                                    itemRef: itemRef,
+                                    contentInfo: .init(contentSize: itemContentInfo.contentSize, contentYOffsetsByID: pageContentYOffsetsByID),
+                                    contentYOffset: pageContentYOffset,
+                                    pageSize: pageSize
+                                )
+                            }
                         }
-
-                        let itemContentInfo = try itemContentInfoResult.get()
-
-                        return (0..<Int(ceil(itemContentInfo.contentSize.height / pageSize.height))).map {
-                            let pageContentYOffset = CGFloat($0) * pageSize.height
-                            let pageSize = CGSize(width: pageSize.width, height: min(pageSize.height, itemContentInfo.contentSize.height - pageContentYOffset))
-
-                            let pageContentYOffsetsByID = itemContentInfo.contentYOffsetsByID.filter({ (pageContentYOffset...(pageContentYOffset + pageSize.height)) ~= $0.value })
-
-                            return EPUB.PagePosition(
-                                itemRef: itemRef,
-                                contentInfo: .init(contentSize: itemContentInfo.contentSize, contentYOffsetsByID: pageContentYOffsetsByID),
-                                contentYOffset: pageContentYOffset,
-                                pageSize: pageSize
-                            )
-                        }
-                    })
+                    )
                 } catch {
                     return .failure(error)
                 }
