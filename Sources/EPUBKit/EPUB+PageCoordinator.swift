@@ -83,12 +83,14 @@ extension EPUB {
         init(_ pageCoordinatorManager: PageCoordinatorManager) {
             self.pageCoordinatorManager = pageCoordinatorManager
             self.itemContentInfoResultsSubscription = pageCoordinatorManager.$itemContentInfoResultsByWidth
+                .subscribe(on: mainQueue)
                 .receive(on: mainQueue)
                 .compactMap { [unowned self] in $0[self.pageSize.width] }
                 .sink(receiveValue: { [unowned self](_) in
                     self.calculatePagePositions()
                 })
             self.epubStateSubscriber = pageCoordinatorManager.epub.$state
+                .subscribe(on: mainQueue)
                 .receive(on: mainQueue)
                 .sink(receiveValue: { [unowned self](state) in
                     switch state {
