@@ -76,7 +76,7 @@ extension EPUB {
 
             offscreenPrerenderOperationQueue.name = "\(String(reflecting: Self.self)).\(Unmanaged.passUnretained(self).toOpaque()).offscreenPrerender"
             offscreenPrerenderOperationQueue.underlyingQueue = mainQueue
-            offscreenPrerenderOperationQueue.maxConcurrentOperationCount = 1
+            offscreenPrerenderOperationQueue.maxConcurrentOperationCount = ProcessInfo.processInfo.processorCount
 
             return offscreenPrerenderOperationQueue
         }()
