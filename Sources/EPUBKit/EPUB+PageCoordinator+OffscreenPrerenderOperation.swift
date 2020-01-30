@@ -43,8 +43,10 @@ extension EPUB.PageCoordinator {
             didSet {
                 switch state {
                 case .cancelled, .finished:
-                    webView.stopLoading()
-                    webView.navigationDelegate = nil
+                    DispatchQueue.main.async {
+                        self.webView.stopLoading()
+                        self.webView.navigationDelegate = nil
+                    }
                 default:
                     break
                 }
@@ -60,7 +62,9 @@ extension EPUB.PageCoordinator {
         }
 
         deinit {
-            webView.configuration.userContentController.removeScriptMessageHandler(forName: "$")
+            DispatchQueue.main.async { [webView] in // For dealloc operation in Main Thread
+                webView.configuration.userContentController.removeScriptMessageHandler(forName: "$")
+            }
         }
 
         override func start() {
@@ -80,7 +84,6 @@ extension EPUB.PageCoordinator {
         }
 
         override func cancel() {
-            self.webView.stopLoading()
             self.state = .cancelled
         }
     }

@@ -24,15 +24,6 @@ extension EPUB {
     open class PageCoordinator: ObservableObject {
         private unowned var pageCoordinatorManager: PageCoordinatorManager
 
-        lazy var offscreenPrerenderOperationQueue: OperationQueue = {
-            let offscreenPrerenderOperationQueue = OperationQueue()
-
-            offscreenPrerenderOperationQueue.underlyingQueue = mainQueue
-            offscreenPrerenderOperationQueue.maxConcurrentOperationCount = 1
-
-            return offscreenPrerenderOperationQueue
-        }()
-
         open var epub: EPUB {
             return pageCoordinatorManager.epub
         }
@@ -68,9 +59,7 @@ extension EPUB {
                 .eraseToAnyPublisher()
         }
 
-        open var progress: Progress {
-            offscreenPrerenderOperationQueue.progress
-        }
+        @Published open private(set) var progress = Progress()
 
         private var itemContentInfoResultsSubscription: AnyCancellable?
         private var spineItemHeightCalculateResultsByWidthSubscriber: AnyCancellable?
@@ -79,6 +68,16 @@ extension EPUB {
         lazy var mainQueue = DispatchQueue(
             label: "\(String(reflecting: Self.self)).\(Unmanaged.passUnretained(self).toOpaque()).main", target: epub.mainQueue
         )
+
+        lazy var offscreenPrerenderOperationQueue: OperationQueue = {
+            let offscreenPrerenderOperationQueue = OperationQueue()
+
+            offscreenPrerenderOperationQueue.name = "\(String(reflecting: Self.self)).\(Unmanaged.passUnretained(self).toOpaque()).offscreenPrerender"
+            offscreenPrerenderOperationQueue.underlyingQueue = mainQueue
+            offscreenPrerenderOperationQueue.maxConcurrentOperationCount = 1
+
+            return offscreenPrerenderOperationQueue
+        }()
 
         init(_ pageCoordinatorManager: PageCoordinatorManager) {
             self.pageCoordinatorManager = pageCoordinatorManager
@@ -128,8 +127,9 @@ extension EPUB.PageCoordinator {
         }
 
         mainQueue.async { [weak self, pageCoordinatorManager = self.pageCoordinatorManager] in
-            DispatchQueue.main.async { // For cancel operation in Main Thread
-                self?.offscreenPrerenderOperationQueue.cancelAllOperations()
+            self?.offscreenPrerenderOperationQueue.cancelAllOperations()
+            DispatchQueue.main.async {
+                self?.progress = Progress(totalUnitCount: Int64(epub.spine.itemRefs.count))
             }
 
             epub.spine.itemRefs.forEach { (itemRef) in
@@ -146,19 +146,17 @@ extension EPUB.PageCoordinator {
                     pageWidth: pageSize.width
                 )
                 operation.completionBlock = {
-                    DispatchQueue.main.async { // For dealloc operation in Main Thread
-                        guard case .finished(let result) = operation.state else {
-                            return
-                        }
+                    guard case .finished(let result) = operation.state else {
+                        return
+                    }
 
+                    DispatchQueue.main.async {
+                        self?.progress.completedUnitCount += 1
                         pageCoordinatorManager[pageWidth: operation.pageWidth][itemRef] = result
                     }
                 }
 
-                DispatchQueue.main.async {
-                    self?.offscreenPrerenderOperationQueue.progress.totalUnitCount += 1
-                    self?.offscreenPrerenderOperationQueue.addOperation(operation)
-                }
+                self?.offscreenPrerenderOperationQueue.addOperation(operation)
             }
         }
     }
