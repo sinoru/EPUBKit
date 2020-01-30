@@ -36,15 +36,18 @@ extension EPUB {
             }
         }
 
-        open var pagePositions: Result<[PagePosition], Swift.Error> {
-            pageCoordinatorManager.pagePositionsBySize[pageSize] ?? .success([])
+        open var pagePositions: [[PagePosition]?] {
+            return epub.spine.itemRefs
+                .map {
+                    pageCoordinatorManager[pageSize: pageSize][$0]
+                }
         }
-
-        open var pagePositionsPublisher: AnyPublisher<[PagePosition], Swift.Error> {
+        
+        open var pagePositionsPublisher: AnyPublisher<[[PagePosition]?], Never> {
             pageCoordinatorManager.$pagePositionsBySize
                 .receive(on: mainQueue)
                 .compactMap { $0[self.pageSize] }
-                .tryMap { try $0.get() }
+                .map { (pagePositions) in self.epub.spine.itemRefs.map { pagePositions[$0] } }
                 .eraseToAnyPublisher()
         }
 
@@ -61,7 +64,6 @@ extension EPUB {
 
         @Published open private(set) var progress = Progress()
 
-        private var itemContentInfoResultsSubscription: AnyCancellable?
         private var spineItemHeightCalculateResultsByWidthSubscriber: AnyCancellable?
         private var epubStateSubscriber: AnyCancellable?
 
@@ -81,13 +83,6 @@ extension EPUB {
 
         init(_ pageCoordinatorManager: PageCoordinatorManager) {
             self.pageCoordinatorManager = pageCoordinatorManager
-            self.itemContentInfoResultsSubscription = pageCoordinatorManager.$itemContentInfoResultsByWidth
-                .subscribe(on: mainQueue)
-                .receive(on: mainQueue)
-                .compactMap { [unowned self] in $0[self.pageSize.width] }
-                .sink(receiveValue: { [unowned self](_) in
-                    self.calculatePagePositions()
-                })
             self.epubStateSubscriber = pageCoordinatorManager.epub.$state
                 .subscribe(on: mainQueue)
                 .receive(on: mainQueue)
@@ -138,6 +133,7 @@ extension EPUB.PageCoordinator {
                 }
 
                 guard pageCoordinatorManager[pageWidth: pageSize.width][itemRef] == nil else {
+                    self?.calculatePagePositions(for: itemRef)
                     return
                 }
 
@@ -153,6 +149,7 @@ extension EPUB.PageCoordinator {
                     DispatchQueue.main.async {
                         self?.progress.completedUnitCount += 1
                         pageCoordinatorManager[pageWidth: operation.pageWidth][itemRef] = result
+                        self?.calculatePagePositions(for: itemRef)
                     }
                 }
 
@@ -161,43 +158,38 @@ extension EPUB.PageCoordinator {
         }
     }
 
-    func calculatePagePositions() {
-        let epub = self.epub
+    func calculatePagePositions(for itemRef: EPUB.Item.Ref) {
         let pageSize = self.pageSize
 
         mainQueue.async { [pageCoordinatorManager = self.pageCoordinatorManager] in
-            let pagePositionsResult: Result<[EPUB.PagePosition], Swift.Error> = {
-                do {
-                    return .success(
-                        try epub.spine.itemRefs.flatMap { (itemRef) -> [EPUB.PagePosition] in
-                            guard let itemContentInfoResult = pageCoordinatorManager.itemContentInfoResultsByWidth[pageSize.width]?[itemRef] else {
-                                return []
-                            }
+            guard pageCoordinatorManager[pageSize: pageSize][itemRef] == nil else {
+                return
+            }
 
-                            let itemContentInfo = try itemContentInfoResult.get()
+            guard let itemContentInfoResult = pageCoordinatorManager.itemContentInfoResultsByWidth[pageSize.width]?[itemRef] else {
+                return
+            }
 
-                            return (0..<Int(ceil(itemContentInfo.contentSize.height / pageSize.height))).map {
-                                let pageContentYOffset = CGFloat($0) * pageSize.height
-                                let pageSize = CGSize(width: pageSize.width, height: min(pageSize.height, itemContentInfo.contentSize.height - pageContentYOffset))
+            guard let itemContentInfo = try? itemContentInfoResult.get() else {
+                return
+            }
 
-                                let pageContentYOffsetsByID = itemContentInfo.contentYOffsetsByID.filter({ (pageContentYOffset...(pageContentYOffset + pageSize.height)) ~= $0.value })
+            let pagePositions: [EPUB.PagePosition] = (0..<Int(ceil(itemContentInfo.contentSize.height / pageSize.height))).map {
+                let pageContentYOffset = CGFloat($0) * pageSize.height
+                let pageSize = CGSize(width: pageSize.width, height: min(pageSize.height, itemContentInfo.contentSize.height - pageContentYOffset))
 
-                                return EPUB.PagePosition(
-                                    itemRef: itemRef,
-                                    contentInfo: .init(contentSize: itemContentInfo.contentSize, contentYOffsetsByID: pageContentYOffsetsByID),
-                                    contentYOffset: pageContentYOffset,
-                                    pageSize: pageSize
-                                )
-                            }
-                        }
-                    )
-                } catch {
-                    return .failure(error)
-                }
-            }()
+                let pageContentYOffsetsByID = itemContentInfo.contentYOffsetsByID.filter({ (pageContentYOffset...(pageContentYOffset + pageSize.height)) ~= $0.value })
+
+                return EPUB.PagePosition(
+                    itemRef: itemRef,
+                    contentInfo: .init(contentSize: itemContentInfo.contentSize, contentYOffsetsByID: pageContentYOffsetsByID),
+                    contentYOffset: pageContentYOffset,
+                    pageSize: pageSize
+                )
+            }
 
             DispatchQueue.main.async {
-                pageCoordinatorManager.pagePositionsBySize[pageSize] = pagePositionsResult
+                pageCoordinatorManager[pageSize: pageSize][itemRef] = pagePositions
             }
         }
     }

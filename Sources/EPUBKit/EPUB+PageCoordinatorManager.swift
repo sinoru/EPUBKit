@@ -15,7 +15,7 @@ extension EPUB {
         unowned let epub: EPUB
 
         @Published var itemContentInfoResultsByWidth = [CGFloat: [Item.Ref: Result<ItemContentInfo, Swift.Error>]]()
-        @Published var pagePositionsBySize = [CGSize: Result<[PagePosition], Swift.Error>]()
+        @Published var pagePositionsBySize = [CGSize: [Item.Ref: [PagePosition]]]()
 
         init(_ epub: EPUB) {
             self.epub = epub
@@ -31,6 +31,15 @@ extension EPUB {
             }
             set {
                 itemContentInfoResultsByWidth[pageWidth] = newValue
+            }
+        }
+
+        subscript(pageSize pageSize: CGSize) -> [Item.Ref: [PagePosition]] {
+            get {
+                return pagePositionsBySize[pageSize] ?? [:]
+            }
+            set {
+                pagePositionsBySize[pageSize] = newValue
             }
         }
     }

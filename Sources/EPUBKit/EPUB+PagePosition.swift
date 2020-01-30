@@ -61,4 +61,37 @@ extension Array where Element == EPUB.PagePosition {
     }
 }
 
+extension Array where Element == EPUB.PagePosition? {
+    public func estimatedIndex(of element: EPUB.PagePosition) -> Int? {
+        return lastIndex {
+            guard
+                $0?.pageSize == element.pageSize,
+                $0?.itemRef == element.itemRef
+            else {
+                return false
+            }
+
+            return ($0?.contentYOffset ?? 0) <= element.contentYOffset
+        }
+    }
+
+    subscript(itemRef: EPUB.Item.Ref, contentYOffset: CGFloat) -> Element? {
+        return last {
+            guard
+                $0?.itemRef == itemRef
+            else {
+                return false
+            }
+
+            return ($0?.contentYOffset ?? 0) <= contentYOffset
+        }
+    }
+}
+
+extension Array where Element == [EPUB.PagePosition]? {
+    public func flatten() -> [EPUB.PagePosition?] {
+        self.reduce(into: [], { $0 += $1 ?? [nil] })
+    }
+}
+
 #endif
