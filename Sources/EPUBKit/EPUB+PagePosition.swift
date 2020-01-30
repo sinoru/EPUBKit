@@ -92,6 +92,14 @@ extension Array where Element == [EPUB.PagePosition]? {
     public func flatten() -> [EPUB.PagePosition?] {
         self.reduce(into: [], { $0 += $1 ?? [nil] })
     }
+
+    public func compacted() -> [EPUB.PagePosition] {
+        let `self` = self.flatten()
+
+        let firstNil = self.firstIndex(of: nil)
+
+        return self[self.startIndex...(firstNil ?? (self.endIndex - 1))].compactMap { $0 }
+    }
 }
 
 #endif
