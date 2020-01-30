@@ -63,7 +63,7 @@ class ZIP {
     }
 
     func unarchiveItems(to dstURL: URL, progressHandler: ((Double) -> Void)? = nil) throws {
-        var progressHandler = progressHandler
+        var progressHandler = Unmanaged.passRetained(progressHandler as AnyObject)
 
         let progressCallback: @convention(c) (UnsafeMutableRawPointer?, UnsafeMutableRawPointer?, UnsafeMutablePointer<mz_zip_file>?, Int64) -> Int32 = { (handle, userData, fileInfo, position) in
             var raw = UInt8(0)
@@ -73,23 +73,30 @@ class ZIP {
                 fatalError()
             }
 
-            let progress: Double
-            if (raw > 0 && fileInfo.compressed_size > 0) {
-                progress = Double(position) / Double(fileInfo.compressed_size) * 100
-            } else if (raw == 0 && fileInfo.uncompressed_size > 0) {
-                progress = Double(position) / Double(fileInfo.uncompressed_size) * 100
-            } else {
-                progress = -1
-            }
+            if let userDataRawPointer = userData {
+                let userData = userDataRawPointer.assumingMemoryBound(to: AnyObject.self)
 
-            userData?.assumingMemoryBound(to: ((Double) -> Void)?.self).pointee?(progress)
+                if let progressHandler = Unmanaged<AnyObject>.fromOpaque(userData).takeRetainedValue() as? ((Double) -> Void) {
+                    let progress: Double
+                    if (raw > 0 && fileInfo.compressed_size > 0) {
+                        progress = Double(position) / Double(fileInfo.compressed_size) * 100
+                    } else if (raw == 0 && fileInfo.uncompressed_size > 0) {
+                        progress = Double(position) / Double(fileInfo.uncompressed_size) * 100
+                    } else {
+                        progress = -1
+                    }
+
+                    progressHandler(progress)
+                }
+            }
 
             return MZ_OK
         }
 
-        mz_zip_reader_set_progress_cb(zipReader, &progressHandler, progressCallback)
+        mz_zip_reader_set_progress_cb(zipReader, progressHandler.toOpaque(), progressCallback)
         defer {
             mz_zip_reader_set_progress_cb(zipReader, nil, nil)
+            progressHandler.release()
         }
 
         var error = MZ_OK

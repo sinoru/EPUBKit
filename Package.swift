@@ -26,16 +26,16 @@ let package = Package(
     dependencies: [
         // Dependencies declare other packages that this package depends on.
         // .package(url: /* package url */, from: "1.0.0"),
-        .package(url: "https://github.com/sinoru/SNFoundation.swift.git", .revision("a19d1627ed46ac123fcd79d187f47cb589b96a02")),
+        .package(url: "https://github.com/sinoru/SNFoundation.swift.git", .revision("7cc9dfede144ef0d5e30a02eaeebbe67dd43e66c")),
         .package(url: "https://github.com/sinoru/Shinjuku.git", .revision("9870c26a60bbec70cc9900985672516c008b9a5a")),
-        .package(url: "https://github.com/sinoru/minizip.git", .revision("9f7e70eb")),
+        .package(url: "https://github.com/sinoru/CMinizip.swift.git", .upToNextMajor(from: "2.9.1")),
     ],
     targets: [
         // Targets are the basic building blocks of a package. A target can define a module or a test suite.
         // Targets can depend on other targets in this package, and on products in packages which this package depends on.
         .target(
             name: "EPUBKit",
-            dependencies: ["XMLKit", "SNFoundation", "Shinjuku", "minizip"]),
+            dependencies: ["XMLKit", "SNFoundation", "Shinjuku", "CMinizip"]),
         .testTarget(
             name: "EPUBKitTests",
             dependencies: ["EPUBKit"]),

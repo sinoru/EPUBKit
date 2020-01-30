@@ -11,44 +11,8 @@ import SNFoundation
 import CoreGraphics
 import WebKit
 
-extension WKWebView {
-    enum Request {
-        case urlRequest(URLRequest)
-        case htmlString(String, baseURL: URL? = nil)
-        case data(Data, mimeType: String, characterEncodingName: String, baseURL: URL)
-        case fileURL(URL, allowingReadAccessTo: URL)
-    }
-
-    @discardableResult
-    func load(_ request: Request) -> WKNavigation? {
-        switch request {
-        case .urlRequest(let urlRequest):
-            return load(urlRequest)
-        case .htmlString(let htmlString, baseURL: let baseURL):
-            return loadHTMLString(htmlString, baseURL: baseURL)
-        case .data(let data, mimeType: let mimeType, characterEncodingName: let characterEncodingName, baseURL: let baseURL):
-            return load(data, mimeType: mimeType, characterEncodingName: characterEncodingName, baseURL: baseURL)
-        case .fileURL(let fileURL, allowingReadAccessTo: let readAccessURL):
-            return loadFileURL(fileURL, allowingReadAccessTo: readAccessURL)
-        }
-    }
-}
-
-private class _WKScriptMessageHandlerWrapper<Handler: WKScriptMessageHandler>: NSObject, WKScriptMessageHandler {
-    weak var handler: Handler?
-
-    init(_ handler: Handler) {
-        self.handler = handler
-    }
-
-    func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
-        handler?.userContentController(userContentController, didReceive: message)
-    }
-}
-
-
 extension EPUB.PageCoordinator {
-    class OffscreenPrerenderOperation: AsynchronousOperation<CGFloat, Swift.Error> {
+    class OffscreenPrerenderOperation: AsynchronousOperation<EPUB.ItemContentInfo, Swift.Error> {
         private static let processPool = WKProcessPool()
 
         let request: WKWebView.Request
@@ -57,8 +21,11 @@ extension EPUB.PageCoordinator {
         lazy var webView: WKWebView = {
             let configuration = WKWebViewConfiguration()
             configuration.processPool = Self.processPool
-            configuration.userContentController.add(_WKScriptMessageHandlerWrapper(self), name: "$")
-            configuration.userContentController.addUserScript(.init(
+
+            let webView = WKWebView(frame: .zero, configuration: configuration)
+
+            webView.configuration.userContentController.add(self.weakScriptMessageHandler, name: "$")
+            webView.configuration.userContentController.addUserScript(.init(
                 source: """
                     window.addEventListener('load', (event) => {
                         window.webkit.messageHandlers.$.postMessage(null)
@@ -67,20 +34,19 @@ extension EPUB.PageCoordinator {
                 injectionTime: .atDocumentStart,
                 forMainFrameOnly: true
             ))
-
-            let webView = WKWebView(frame: CGRect(origin: .zero, size: .init(width: 100, height: 100)), configuration: configuration)
-
             webView.navigationDelegate = self
 
             return webView
         }()
 
-        override var state: AsynchronousOperation<CGFloat, Error>.State? {
+        override var state: AsynchronousOperation<EPUB.ItemContentInfo, Error>.State? {
             didSet {
                 switch state {
                 case .cancelled, .finished:
-                    webView.stopLoading()
-                    webView.navigationDelegate = nil
+                    DispatchQueue.main.async {
+                        self.webView.stopLoading()
+                        self.webView.navigationDelegate = nil
+                    }
                 default:
                     break
                 }
@@ -95,18 +61,29 @@ extension EPUB.PageCoordinator {
             self.state = .ready
         }
 
-        override func start() {
-            guard case .ready = state else {
-                return
+        deinit {
+            DispatchQueue.main.async { [webView] in // For dealloc operation in Main Thread
+                webView.configuration.userContentController.removeScriptMessageHandler(forName: "$")
             }
+        }
 
-            self.webView.frame.size.width = self.pageWidth
-            self.webView.load(self.request)
-            self.state = .executing
+        override func start() {
+            switch state {
+            case .ready:
+                self.state = .executing
+                DispatchQueue.main.async {
+                    self.webView.frame.size = CGSize(width: self.pageWidth, height: .greatestFiniteMagnitude)
+                    self.webView.load(self.request)
+                }
+            case .cancelled:
+                self.state = .executing
+                self.state = .cancelled
+            default:
+                break
+            }
         }
 
         override func cancel() {
-            self.webView.stopLoading()
             self.state = .cancelled
         }
     }
@@ -124,13 +101,37 @@ extension EPUB.PageCoordinator.OffscreenPrerenderOperation: WKNavigationDelegate
 
 extension EPUB.PageCoordinator.OffscreenPrerenderOperation: WKScriptMessageHandler {
     func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
-        webView.evaluateJavaScript("document.body.scrollHeight") { [weak self](scrollHeight, error) in
-            guard let scrollHeight = scrollHeight as? CGFloat else {
-                self?.state = .finished(.failure(error!))
-                return
-            }
+        webView.evaluateJavaScript("""
+        new Object({
+            scrollWidth: document.body.scrollWidth,
+            scrollHeight: document.body.scrollHeight,
+            contentYOffsetsByID: Array.from(document.querySelectorAll('*[id]')).reduce((r, v) => { return {...r, [v.id]: v.getBoundingClientRect().y }}, {})
+        })
+        """) { [weak self](result, error) in
+            do {
+                guard let result = result as? [String: Any] else {
+                    throw error ?? EPUB.Error.unknown
+                }
 
-            self?.state = .finished(.success(scrollHeight))
+                guard let scrollWidth = result["scrollWidth"] as? Double else {
+                    throw EPUB.Error.unknown
+                }
+
+                guard let scrollHeight = result["scrollHeight"] as? Double else {
+                    throw EPUB.Error.unknown
+                }
+
+                guard let contentYOffsetsByID = result["contentYOffsetsByID"] as? [String: Double] else {
+                    throw EPUB.Error.unknown
+                }
+
+                self?.state = .finished(.success(.init(
+                    contentSize: CGSize(width: scrollWidth, height: scrollHeight),
+                    contentYOffsetsByID: contentYOffsetsByID.mapValues({ CGFloat($0) })
+                )))
+            } catch {
+                self?.state = .finished(.failure(error))
+            }
         }
     }
 }

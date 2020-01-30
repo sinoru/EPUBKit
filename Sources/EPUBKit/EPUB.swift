@@ -34,9 +34,10 @@ open class EPUB: ObservableObject {
 
     @Published open private(set) var resourceURL: URL?
 
-    @Published open private(set) var metadata: Metadata?
-    @Published open private(set) var items: [Item]?
-    @Published open private(set) var spine: Spine?
+    @Published open private(set) var metadata: Metadata = .init()
+    @Published open private(set) var items: [Item] = []
+    @Published open private(set) var spine: Spine = .init()
+    @Published open private(set) var toc: TOC?
 
     #if canImport(CoreGraphics) && canImport(WebKit)
     private lazy var pageCoordinatorManager = PageCoordinatorManager(self)
@@ -93,7 +94,9 @@ open class EPUB: ObservableObject {
                     return
                 }
 
-                self.opfFilePath = metaInfOPFPath
+                DispatchQueue.main.async {
+                    self.opfFilePath = metaInfOPFPath
+                }
 
                 guard let opfData = try fileHandler.loadFileData(filename: metaInfOPFPath) else {
                     self.updateState(.error(Error.invalidEPUB))
@@ -132,6 +135,28 @@ open class EPUB: ObservableObject {
                 DispatchQueue.main.async {
                     self.spine = spine
                 }
+
+                try spine.tocItemID
+                    .flatMap {
+                        items[$0]?.url
+                    }
+                    .flatMap {
+                        URL(fileURLWithPath: metaInfOPFPath).deletingLastPathComponent().appendingPathComponent($0.relativePath).relativePath
+                    }
+                    .flatMap {
+                        guard let ncxData = try fileHandler.loadFileData(filename: $0) else {
+                            self.updateState(.error(Error.invalidEPUB))
+                            return
+                        }
+
+                        let ncxParseOperation = XMLParseOperation(data: ncxData)
+                        ncxParseOperation.start()
+
+                        let toc = try TOC(ncxXMLDocument: ncxParseOperation.xmlDocument)
+                        DispatchQueue.main.async {
+                            self.toc = toc
+                        }
+                    }
 
                 self.updateState(.closed)
             } catch {
@@ -204,7 +229,7 @@ open class EPUB: ObservableObject {
 
 extension EPUB: Identifiable {
     public var id: UUID {
-        return self.metadata?.bookID ?? UUID.empty
+        return self.metadata.bookID
     }
 }
 
@@ -243,6 +268,7 @@ extension EPUB {
 
 extension EPUB {
     public enum Error: Swift.Error {
+        case unknown
         case invalidEPUB
         case invalidState
     }

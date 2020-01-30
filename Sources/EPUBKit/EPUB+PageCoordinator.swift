@@ -24,18 +24,6 @@ extension EPUB {
     open class PageCoordinator: ObservableObject {
         private unowned var pageCoordinatorManager: PageCoordinatorManager
 
-        private var spineItemHeightCalculateResultsByWidthSubscriber: AnyCancellable?
-        private var epubStateSubscriber: AnyCancellable?
-
-        lazy var offscreenPrerenderOperationQueue: OperationQueue = {
-            let offscreenPrerenderOperationQueue = OperationQueue()
-
-            offscreenPrerenderOperationQueue.underlyingQueue = DispatchQueue.main // Operation contains UIView which should be called on main thread even dealloc
-            offscreenPrerenderOperationQueue.maxConcurrentOperationCount = 2
-
-            return offscreenPrerenderOperationQueue
-        }()
-
         open var epub: EPUB {
             return pageCoordinatorManager.epub
         }
@@ -48,26 +36,56 @@ extension EPUB {
             }
         }
 
-        open var pagePositions: Result<[PagePosition], Swift.Error> {
-            return pageCoordinatorManager.pagePositionsBySize[pageSize] ?? .success([])
+        open var pagePositions: [[PagePosition]?] {
+            return epub.spine.itemRefs
+                .map {
+                    pageCoordinatorManager[pageSize: pageSize][$0]
+                }
         }
-
-        open var pagePositionsPublisher: AnyPublisher<[PagePosition], Swift.Error> {
-            return pageCoordinatorManager.$pagePositionsBySize
-                .compactMap({ $0[self.pageSize] })
-                .tryMap({ try $0.get() })
-                .removeDuplicates()
+        
+        open var pagePositionsPublisher: AnyPublisher<[[PagePosition]?], Never> {
+            pageCoordinatorManager.$pagePositionsBySize
+                .receive(on: mainQueue)
+                .compactMap { $0[self.pageSize] }
+                .map { (pagePositions) in self.epub.spine.itemRefs.map { pagePositions[$0] } }
                 .eraseToAnyPublisher()
         }
 
+        open var itemContentInfoResults: [Item.Ref: Result<ItemContentInfo, Swift.Error>] {
+            pageCoordinatorManager.itemContentInfoResultsByWidth[pageSize.width] ?? [:]
+        }
+
+        open var itemContentInfoResultsPublisher: AnyPublisher<[Item.Ref: Result<ItemContentInfo, Swift.Error>], Never> {
+            pageCoordinatorManager.$itemContentInfoResultsByWidth
+                .receive(on: mainQueue)
+                .compactMap { $0[self.pageSize.width] }
+                .eraseToAnyPublisher()
+        }
+
+        @Published open private(set) var progress = Progress()
+
+        private var spineItemHeightCalculateResultsByWidthSubscriber: AnyCancellable?
+        private var epubStateSubscriber: AnyCancellable?
+
+        lazy var mainQueue = DispatchQueue(
+            label: "\(String(reflecting: Self.self)).\(Unmanaged.passUnretained(self).toOpaque()).main", target: epub.mainQueue
+        )
+
+        lazy var offscreenPrerenderOperationQueue: OperationQueue = {
+            let offscreenPrerenderOperationQueue = OperationQueue()
+
+            offscreenPrerenderOperationQueue.name = "\(String(reflecting: Self.self)).\(Unmanaged.passUnretained(self).toOpaque()).offscreenPrerender"
+            offscreenPrerenderOperationQueue.underlyingQueue = mainQueue
+            offscreenPrerenderOperationQueue.maxConcurrentOperationCount = ProcessInfo.processInfo.processorCount
+
+            return offscreenPrerenderOperationQueue
+        }()
+
         init(_ pageCoordinatorManager: PageCoordinatorManager) {
             self.pageCoordinatorManager = pageCoordinatorManager
-            self.spineItemHeightCalculateResultsByWidthSubscriber = pageCoordinatorManager.$spineItemHeightCalculateResultsByWidth
-                .compactMap({ [unowned self] in $0[self.pageSize.width] })
-                .sink(receiveValue: { [unowned self](_) in
-                    self.calculatePagePositions()
-                })
             self.epubStateSubscriber = pageCoordinatorManager.epub.$state
+                .subscribe(on: mainQueue)
+                .receive(on: mainQueue)
                 .sink(receiveValue: { [unowned self](state) in
                     switch state {
                     case .normal:
@@ -82,27 +100,18 @@ extension EPUB {
             offscreenPrerenderOperationQueue.cancelAllOperations()
         }
 
-        open func spineItemHeightForRef(_ itemRef: Item.Ref) throws -> CGFloat? {
-            try pageCoordinatorManager.spineItemHeightCalculateResultsByWidth[pageSize.width]?[itemRef]?.get()
-        }
-
-        open func spineItemHeightPublisherForRef(_ itemRef: Item.Ref) -> AnyPublisher<CGFloat, Swift.Error> {
-            return pageCoordinatorManager.$spineItemHeightCalculateResultsByWidth
-                .compactMap({ $0[self.pageSize.width] })
-                .compactMap({ $0[itemRef] })
-                .tryMap({ try $0.get() })
-                .removeDuplicates()
-                .eraseToAnyPublisher()
+        open func itemContentInfoForRef(_ itemRef: Item.Ref) throws -> ItemContentInfo? {
+            try itemContentInfoResults[itemRef]?.get()
         }
     }
 }
 
 extension EPUB.PageCoordinator {
     func calculateSpineItemHeights() {
+        let epub = self.epub
+
         guard
-            let resourceURL = epub.resourceURL,
-            let spine = epub.spine,
-            let items = epub.items
+            let resourceURL = epub.resourceURL
         else {
             return
         }
@@ -112,69 +121,75 @@ extension EPUB.PageCoordinator {
             return
         }
 
-        epub.mainQueue.async {
-            spine.itemRefs.forEach { (itemRef) in
-                guard let item = items[itemRef] else {
+        mainQueue.async { [weak self, pageCoordinatorManager = self.pageCoordinatorManager] in
+            self?.offscreenPrerenderOperationQueue.cancelAllOperations()
+            DispatchQueue.main.async {
+                self?.progress = Progress(totalUnitCount: Int64(epub.spine.itemRefs.count))
+            }
+
+            epub.spine.itemRefs.forEach { (itemRef) in
+                guard let item = epub.items[itemRef] else {
                     return
                 }
 
-                guard self.pageCoordinatorManager[pageWidth: pageSize.width][itemRef] == nil else {
+                guard pageCoordinatorManager[pageWidth: pageSize.width][itemRef] == nil else {
+                    self?.calculatePagePositions(for: itemRef)
                     return
                 }
 
                 let operation = OffscreenPrerenderOperation(
-                    request: .fileURL(resourceURL.appendingPathComponent(item.relativePath), allowingReadAccessTo: resourceURL),
-                    pageWidth: self.pageSize.width
+                    request: .fileURL(resourceURL.appendingPathComponent(item.url.relativePath), allowingReadAccessTo: resourceURL),
+                    pageWidth: pageSize.width
                 )
                 operation.completionBlock = {
-                    DispatchQueue.main.async { [weak self] in // For dealloc operation in Main Thread
-                        guard case .finished(let result) = operation.state else {
-                            return
-                        }
+                    guard case .finished(let result) = operation.state else {
+                        return
+                    }
 
-                        self?.pageCoordinatorManager[pageWidth: operation.pageWidth][itemRef] = result
+                    DispatchQueue.main.async {
+                        self?.progress.completedUnitCount += 1
+                        pageCoordinatorManager[pageWidth: operation.pageWidth][itemRef] = result
+                        self?.calculatePagePositions(for: itemRef)
                     }
                 }
 
-                self.offscreenPrerenderOperationQueue.addOperation(operation)
+                self?.offscreenPrerenderOperationQueue.addOperation(operation)
             }
         }
     }
 
-    func calculatePagePositions() {
-        guard let spine = self.epub.spine else {
-            return
-        }
-
+    func calculatePagePositions(for itemRef: EPUB.Item.Ref) {
         let pageSize = self.pageSize
 
-        epub.mainQueue.async {
-            let pagePositionsResult: Result<[EPUB.PagePosition], Swift.Error> = {
-                do {
-                    return .success(try spine.itemRefs.flatMap { (itemRef) -> [EPUB.PagePosition] in
-                        guard let spineItemHeightResult = self.pageCoordinatorManager.spineItemHeightCalculateResultsByWidth[pageSize.width]?[itemRef] else {
-                            return []
-                        }
+        mainQueue.async { [pageCoordinatorManager = self.pageCoordinatorManager] in
+            guard pageCoordinatorManager[pageSize: pageSize][itemRef] == nil else {
+                return
+            }
 
-                        let spineItemHeight = try spineItemHeightResult.get()
+            guard let itemContentInfoResult = pageCoordinatorManager.itemContentInfoResultsByWidth[pageSize.width]?[itemRef] else {
+                return
+            }
 
-                        return (0..<Int(ceil(spineItemHeight / pageSize.height))).map {
-                            return EPUB.PagePosition(
-                                itemRef: itemRef,
-                                contentYOffset: CGFloat($0) * pageSize.height,
-                                contentSize: .init(width: pageSize.width, height: spineItemHeight),
-                                pageSize: .init(width: pageSize.width, height: min(pageSize.height, spineItemHeight - (CGFloat($0) * pageSize.height)))
-                            )
-                        }
+            guard let itemContentInfo = try? itemContentInfoResult.get() else {
+                return
+            }
 
-                    })
-                } catch {
-                    return .failure(error)
-                }
-            }()
+            let pagePositions: [EPUB.PagePosition] = (0..<Int(ceil(itemContentInfo.contentSize.height / pageSize.height))).map {
+                let pageContentYOffset = CGFloat($0) * pageSize.height
+                let pageSize = CGSize(width: pageSize.width, height: min(pageSize.height, itemContentInfo.contentSize.height - pageContentYOffset))
+
+                let pageContentYOffsetsByID = itemContentInfo.contentYOffsetsByID.filter({ (pageContentYOffset...(pageContentYOffset + pageSize.height)) ~= $0.value })
+
+                return EPUB.PagePosition(
+                    itemRef: itemRef,
+                    contentInfo: .init(contentSize: itemContentInfo.contentSize, contentYOffsetsByID: pageContentYOffsetsByID),
+                    contentYOffset: pageContentYOffset,
+                    pageSize: pageSize
+                )
+            }
 
             DispatchQueue.main.async {
-                self.pageCoordinatorManager.pagePositionsBySize[pageSize] = pagePositionsResult
+                pageCoordinatorManager[pageSize: pageSize][itemRef] = pagePositions
             }
         }
     }

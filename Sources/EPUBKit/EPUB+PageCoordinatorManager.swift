@@ -14,8 +14,8 @@ extension EPUB {
     class PageCoordinatorManager {
         unowned let epub: EPUB
 
-        @Published var spineItemHeightCalculateResultsByWidth = [CGFloat: [Item.Ref: Result<CGFloat, Swift.Error>]]()
-        @Published var pagePositionsBySize = [CGSize: Result<[PagePosition], Swift.Error>]()
+        @Published var itemContentInfoResultsByWidth = [CGFloat: [Item.Ref: Result<ItemContentInfo, Swift.Error>]]()
+        @Published var pagePositionsBySize = [CGSize: [Item.Ref: [PagePosition]]]()
 
         init(_ epub: EPUB) {
             self.epub = epub
@@ -25,12 +25,21 @@ extension EPUB {
             return .init(self)
         }
 
-        subscript(pageWidth pageWidth: CGFloat) -> [Item.Ref: Result<CGFloat, Swift.Error>] {
+        subscript(pageWidth pageWidth: CGFloat) -> [Item.Ref: Result<ItemContentInfo, Swift.Error>] {
             get {
-                return spineItemHeightCalculateResultsByWidth[pageWidth] ?? [:]
+                return itemContentInfoResultsByWidth[pageWidth] ?? [:]
             }
             set {
-                spineItemHeightCalculateResultsByWidth[pageWidth] = newValue
+                itemContentInfoResultsByWidth[pageWidth] = newValue
+            }
+        }
+
+        subscript(pageSize pageSize: CGSize) -> [Item.Ref: [PagePosition]] {
+            get {
+                return pagePositionsBySize[pageSize] ?? [:]
+            }
+            set {
+                pagePositionsBySize[pageSize] = newValue
             }
         }
     }

@@ -56,10 +56,10 @@ extension XMLParseOperation: XMLParserDelegate {
     }
 
     public func parser(_ parser: XMLParser, foundCharacters string: String) {
-        guard xmlDocument[xmlDocumentCurrentIndexPath] != nil && isNodeOpend else {
+        guard let currentNode = xmlDocument[xmlDocumentCurrentIndexPath], isNodeOpend else {
             return
         }
 
-        xmlDocument[xmlDocumentCurrentIndexPath]?.character = string
+        xmlDocument[xmlDocumentCurrentIndexPath]?.character = [currentNode.character, string].compactMap({$0}).joined()
     }
 }
