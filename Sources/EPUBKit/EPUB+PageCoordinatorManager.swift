@@ -6,9 +6,8 @@
 //
 
 #if canImport(CoreGraphics) && canImport(WebKit)
-
-import Foundation
 import CoreGraphics
+import Foundation
 
 extension EPUB {
     class PageCoordinatorManager {

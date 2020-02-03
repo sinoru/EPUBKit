@@ -7,7 +7,7 @@ let package = Package(
     name: "EPUBKit",
     platforms: [
         .macOS(.v10_15),
-        .iOS(.v13),
+        .iOS(.v13)
     ],
     products: [
         // Products define the executables and libraries produced by a package, and make them visible to other packages.
@@ -21,14 +21,14 @@ let package = Package(
         .library(
             name: "EPUBKitStatic",
             type: .static,
-            targets: ["EPUBKit"]),
+            targets: ["EPUBKit"])
     ],
     dependencies: [
         // Dependencies declare other packages that this package depends on.
         // .package(url: /* package url */, from: "1.0.0"),
         .package(url: "https://github.com/sinoru/SNFoundation.swift.git", .revision("7cc9dfede144ef0d5e30a02eaeebbe67dd43e66c")),
         .package(url: "https://github.com/sinoru/Shinjuku.git", .revision("9870c26a60bbec70cc9900985672516c008b9a5a")),
-        .package(url: "https://github.com/sinoru/CMinizip.swift.git", .upToNextMajor(from: "2.9.1")),
+        .package(url: "https://github.com/sinoru/CMinizip.swift.git", .upToNextMajor(from: "2.9.1"))
     ],
     targets: [
         // Targets are the basic building blocks of a package. A target can define a module or a test suite.
@@ -42,6 +42,6 @@ let package = Package(
         .target(
             name: "XMLKit"),
         .testTarget(name: "XMLKitTests",
-            dependencies: ["XMLKit"]),
+            dependencies: ["XMLKit"])
     ]
 )

@@ -5,8 +5,8 @@
 //  Created by Jaehong Kang on 2020/01/16.
 //
 
-import Foundation
 import Combine
+import Foundation
 import Shinjuku
 
 #if canImport(CoreGraphics) && canImport(WebKit)
@@ -86,7 +86,7 @@ extension EPUB {
             self.epubStateSubscriber = pageCoordinatorManager.epub.$state
                 .subscribe(on: mainQueue)
                 .receive(on: mainQueue)
-                .sink(receiveValue: { [unowned self](state) in
+                .sink(receiveValue: { [unowned self] state in
                     switch state {
                     case .normal:
                         self.calculateSpineItemHeights()
@@ -127,7 +127,7 @@ extension EPUB.PageCoordinator {
                 self?.progress = Progress(totalUnitCount: Int64(epub.spine.itemRefs.count))
             }
 
-            epub.spine.itemRefs.forEach { (itemRef) in
+            epub.spine.itemRefs.forEach { itemRef in
                 guard let item = epub.items[itemRef] else {
                     return
                 }

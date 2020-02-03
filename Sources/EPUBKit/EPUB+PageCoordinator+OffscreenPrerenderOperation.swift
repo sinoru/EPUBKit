@@ -107,7 +107,7 @@ extension EPUB.PageCoordinator.OffscreenPrerenderOperation: WKScriptMessageHandl
             scrollHeight: document.body.scrollHeight,
             contentYOffsetsByID: Array.from(document.querySelectorAll('*[id]')).reduce((r, v) => { return {...r, [v.id]: v.getBoundingClientRect().y }}, {})
         })
-        """) { [weak self](result, error) in
+        """) { [weak self] result, error in
             do {
                 guard let result = result as? [String: Any] else {
                     throw error ?? EPUB.Error.unknown

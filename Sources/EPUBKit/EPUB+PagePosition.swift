@@ -6,8 +6,8 @@
 //
 
 #if canImport(CoreGraphics)
-import Foundation
 import CoreGraphics
+import Foundation
 
 extension EPUB {
     public struct PagePosition: Equatable {

@@ -73,7 +73,6 @@ final class XMLTests: XCTestCase {
 
     static var allTests = [
         ("testXMLInitNote", testXMLInitNote),
-        ("testXMLInitContainer", testXMLInitContainer),
+        ("testXMLInitContainer", testXMLInitContainer)
     ]
 }
-

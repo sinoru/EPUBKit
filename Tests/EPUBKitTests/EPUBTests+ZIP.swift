@@ -6,8 +6,8 @@
 //
 
 import Foundation
-
 import XCTest
+
 @testable import EPUBKit
 
 extension EPUBTests {
@@ -46,7 +46,7 @@ extension EPUBTests {
             .sink {
                 switch $0 {
                 case .closed:
-                    epub.open { (result) in
+                    epub.open { result in
                         switch result {
                         case .success:
                             XCTAssertNotNil(epub.resourceURL)

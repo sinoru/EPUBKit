@@ -6,6 +6,7 @@
 //
 
 import Foundation
+
 import CMinizip
 
 class ZIP {
@@ -65,7 +66,7 @@ class ZIP {
     func unarchiveItems(to dstURL: URL, progressHandler: ((Double) -> Void)? = nil) throws {
         var progressHandler = Unmanaged.passRetained(progressHandler as AnyObject)
 
-        let progressCallback: @convention(c) (UnsafeMutableRawPointer?, UnsafeMutableRawPointer?, UnsafeMutablePointer<mz_zip_file>?, Int64) -> Int32 = { (handle, userData, fileInfo, position) in
+        let progressCallback: @convention(c) (UnsafeMutableRawPointer?, UnsafeMutableRawPointer?, UnsafeMutablePointer<mz_zip_file>?, Int64) -> Int32 = { handle, userData, fileInfo, position in
             var raw = UInt8(0)
             mz_zip_reader_get_raw(handle, &raw)
 
