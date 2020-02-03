@@ -10,14 +10,14 @@ import CMinizip
 
 class ZIP {
     let fileURL: URL
-    var zipReader: UnsafeMutableRawPointer? = nil
+    var zipReader: UnsafeMutableRawPointer?
 
     init(fileURL url: URL) throws {
         self.fileURL = url
 
         var error = MZ_OK
 
-        mz_zip_reader_create(&zipReader);
+        mz_zip_reader_create(&zipReader)
         error = mz_zip_reader_open_file(zipReader, url.path)
         guard error == MZ_OK else {
             throw ZIP.Error(code: error)
@@ -78,9 +78,9 @@ class ZIP {
 
                 if let progressHandler = Unmanaged<AnyObject>.fromOpaque(userData).takeRetainedValue() as? ((Double) -> Void) {
                     let progress: Double
-                    if (raw > 0 && fileInfo.compressed_size > 0) {
+                    if raw > 0 && fileInfo.compressed_size > 0 {
                         progress = Double(position) / Double(fileInfo.compressed_size) * 100
-                    } else if (raw == 0 && fileInfo.uncompressed_size > 0) {
+                    } else if raw == 0 && fileInfo.uncompressed_size > 0 {
                         progress = Double(position) / Double(fileInfo.uncompressed_size) * 100
                     } else {
                         progress = -1

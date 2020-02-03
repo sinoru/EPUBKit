@@ -30,7 +30,7 @@ extension XMLParseOperation: XMLParserDelegate {
     public func parser(_ parser: XMLParser, didStartElement elementName: String, namespaceURI: String?, qualifiedName qName: String?, attributes attributeDict: [String : String] = [:]) {
         isNodeOpend = true
 
-        guard xmlDocumentCurrentIndexPath.count > 0 else {
+        guard !xmlDocumentCurrentIndexPath.isEmpty else {
             xmlDocument.elements.append(.init(elementName: elementName, namespaceURI: namespaceURI, qualifiedName: qName, attributes: attributeDict))
             xmlDocumentCurrentIndexPath.append(xmlDocument.elements.endIndex - 1)
             return
@@ -52,7 +52,7 @@ extension XMLParseOperation: XMLParserDelegate {
 
             xmlDocumentCurrentIndexPath.removeLast(xmlDocumentCurrentIndexPath.count - parentElementIndexPath.count + 1)
             break
-        } while (parentElementIndexPath.count > 0)
+        } while (!parentElementIndexPath.isEmpty)
     }
 
     public func parser(_ parser: XMLParser, foundCharacters string: String) {

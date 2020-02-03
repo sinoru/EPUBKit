@@ -31,7 +31,7 @@ extension XMLElement {
                 return nil
             }
 
-            if indexPath.count > 0 {
+            if !indexPath.isEmpty {
                 return self.childeren[index][indexPath]
             } else {
                 return self.childeren[index]
@@ -49,7 +49,7 @@ extension XMLElement {
                 return
             }
 
-            if indexPath.count > 0 {
+            if !indexPath.isEmpty {
                 self.childeren[index][indexPath] = newValue
             } else {
                 if let newValue = newValue {

@@ -44,21 +44,21 @@ extension EPUBTests {
         let observationForState = epub.$state
             .debounce(for: .milliseconds(100), scheduler: RunLoop.main)
             .sink {
-            switch $0 {
-            case .closed:
-                epub.open { (result) in
-                    switch result {
-                    case .success:
-                        XCTAssertNotNil(epub.resourceURL)
-                    case .failure(let error):
-                        XCTAssertNil(error)
+                switch $0 {
+                case .closed:
+                    epub.open { (result) in
+                        switch result {
+                        case .success:
+                            XCTAssertNotNil(epub.resourceURL)
+                        case .failure(let error):
+                            XCTAssertNil(error)
+                        }
+                        expectation.fulfill()
                     }
-                    expectation.fulfill()
+                default:
+                    break
                 }
-            default:
-                break
             }
-        }
 
         wait(for: [expectation], timeout: 10.0)
     }

@@ -24,7 +24,7 @@ extension XMLDocument {
                 return nil
             }
 
-            if indexPath.count > 0 {
+            if !indexPath.isEmpty {
                 return self.elements[index][indexPath]
             } else {
                 return self.elements[index]
@@ -37,7 +37,7 @@ extension XMLDocument {
                 fatalError()
             }
 
-            if indexPath.count > 0 {
+            if !indexPath.isEmpty {
                 self.elements[index][indexPath] = newValue
             } else {
                 if let newValue = newValue {
