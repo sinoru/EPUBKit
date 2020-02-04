@@ -12,7 +12,11 @@ import XCTest
 
 extension EPUBTests {
     func testEPUBInitZIP() throws {
-        let epub = try EPUB(fileURL: URL(fileURLWithPath: #file).deletingLastPathComponent().appendingPathComponent("jikji.epub+zip.epub"))
+        let epub = try EPUB(
+            fileURL: URL(fileURLWithPath: #file)
+                .deletingLastPathComponent()
+                .appendingPathComponent("jikji.epub+zip.epub")
+        )
 
         let expectation = XCTestExpectation()
 

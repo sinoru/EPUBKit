@@ -141,7 +141,10 @@ open class EPUB: ObservableObject {
                         items[$0]?.url
                     }
                     .flatMap {
-                        URL(fileURLWithPath: metaInfOPFPath).deletingLastPathComponent().appendingPathComponent($0.relativePath).relativePath
+                        URL(fileURLWithPath: metaInfOPFPath)
+                            .deletingLastPathComponent()
+                            .appendingPathComponent($0.relativePath)
+                            .relativePath
                     }
                     .flatMap {
                         guard let ncxData = try fileHandler.loadFileData(filename: $0) else {

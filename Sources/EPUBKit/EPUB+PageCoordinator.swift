@@ -68,7 +68,8 @@ extension EPUB {
         private var epubStateSubscriber: AnyCancellable?
 
         lazy var mainQueue = DispatchQueue(
-            label: "\(String(reflecting: Self.self)).\(Unmanaged.passUnretained(self).toOpaque()).main", target: epub.mainQueue
+            label: "\(String(reflecting: Self.self)).\(Unmanaged.passUnretained(self).toOpaque()).main",
+            target: epub.mainQueue
         )
 
         lazy var offscreenPrerenderOperationQueue: OperationQueue = {
@@ -138,7 +139,10 @@ extension EPUB.PageCoordinator {
                 }
 
                 let operation = OffscreenPrerenderOperation(
-                    request: .fileURL(resourceURL.appendingPathComponent(item.url.relativePath), allowingReadAccessTo: resourceURL),
+                    request: .fileURL(
+                        resourceURL.appendingPathComponent(item.url.relativePath),
+                        allowingReadAccessTo: resourceURL
+                    ),
                     pageWidth: pageSize.width
                 )
                 operation.completionBlock = {
@@ -176,13 +180,20 @@ extension EPUB.PageCoordinator {
 
             let pagePositions: [EPUB.PagePosition] = (0..<Int(ceil(itemContentInfo.contentSize.height / pageSize.height))).map {
                 let pageContentYOffset = CGFloat($0) * pageSize.height
-                let pageSize = CGSize(width: pageSize.width, height: min(pageSize.height, itemContentInfo.contentSize.height - pageContentYOffset))
+                let pageSize = CGSize(
+                    width: pageSize.width,
+                    height: min(pageSize.height, itemContentInfo.contentSize.height - pageContentYOffset)
+                )
 
-                let pageContentYOffsetsByID = itemContentInfo.contentYOffsetsByID.filter({ (pageContentYOffset...(pageContentYOffset + pageSize.height)) ~= $0.value })
+                let pageContentYOffsetsByID = itemContentInfo.contentYOffsetsByID
+                    .filter({ (pageContentYOffset...(pageContentYOffset + pageSize.height)) ~= $0.value })
 
                 return EPUB.PagePosition(
                     itemRef: itemRef,
-                    contentInfo: .init(contentSize: itemContentInfo.contentSize, contentYOffsetsByID: pageContentYOffsetsByID),
+                    contentInfo: .init(
+                        contentSize: itemContentInfo.contentSize,
+                        contentYOffsetsByID: pageContentYOffsetsByID
+                    ),
                     contentYOffset: pageContentYOffset,
                     pageSize: pageSize
                 )

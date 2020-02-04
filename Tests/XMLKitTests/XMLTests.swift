@@ -12,7 +12,11 @@ import XCTest
 
 final class XMLTests: XCTestCase {
     func testXMLInitNote() throws {
-        let xmlData = try Data(contentsOf: URL(fileURLWithPath: #file).deletingLastPathComponent().appendingPathComponent("note.xml"))
+        let xmlData = try Data(
+            contentsOf: URL(fileURLWithPath: #file)
+                .deletingLastPathComponent()
+                .appendingPathComponent("note.xml")
+        )
 
         let xmlParseOperation = XMLParseOperation(data: xmlData)
         xmlParseOperation.start()
@@ -33,7 +37,11 @@ final class XMLTests: XCTestCase {
     }
 
     func testXMLInitContainer() throws {
-        let xmlData = try Data(contentsOf: URL(fileURLWithPath: #file).deletingLastPathComponent().appendingPathComponent("container.xml"))
+        let xmlData = try Data(
+            contentsOf: URL(fileURLWithPath: #file)
+                .deletingLastPathComponent()
+                .appendingPathComponent("container.xml")
+        )
 
         let xmlParseOperation = XMLParseOperation(data: xmlData)
         xmlParseOperation.start()
