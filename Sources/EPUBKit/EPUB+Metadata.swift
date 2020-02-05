@@ -1,8 +1,6 @@
 //
-//  File.swift
-//  
-//
-//  Created by Jaehong Kang on 2020/01/10.
+//  EPUB+Metadata.swift
+//  EPUBKit
 //
 
 import Foundation

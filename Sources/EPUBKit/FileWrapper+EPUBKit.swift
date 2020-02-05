@@ -1,8 +1,6 @@
 //
-//  FileWrapper.swift
-//  
-//
-//  Created by Jaehong Kang on 2020/01/10.
+//  FileWrapper+EPUBKit.swift
+//  EPUBKit
 //
 
 import Foundation

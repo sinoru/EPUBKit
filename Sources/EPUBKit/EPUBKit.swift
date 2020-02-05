@@ -1,8 +1,6 @@
 //
 //  EPUBKit.swift
-//  
-//
-//  Created by Jaehong Kang on 2020/01/15.
+//  EPUBKit
 //
 
 @_exported import SNFoundation

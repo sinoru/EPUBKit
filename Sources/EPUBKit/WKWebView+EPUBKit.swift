@@ -1,8 +1,6 @@
 //
 //  WKWebView+EPUBKit.swift
-//  
-//
-//  Created by Jaehong Kang on 2020/01/23.
+//  EPUBKit
 //
 
 #if canImport(WebKit)

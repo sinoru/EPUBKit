@@ -1,8 +1,6 @@
 //
 //  XMLParseOperation.swift
-//  
-//
-//  Created by Jaehong Kang on 2020/01/09.
+//  XMLKit
 //
 
 import Foundation

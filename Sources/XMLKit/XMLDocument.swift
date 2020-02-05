@@ -1,8 +1,6 @@
 //
 //  XMLDocument.swift
-//  
-//
-//  Created by Jaehong Kang on 2020/01/10.
+//  XMLKit
 //
 
 import Foundation

@@ -1,8 +1,6 @@
 //
 //  EPUB+PageCoordinator.swift
-//  
-//
-//  Created by Jaehong Kang on 2020/01/16.
+//  EPUBKit
 //
 
 import Combine

@@ -1,8 +1,6 @@
 //
 //  EPUB+TOC.swift
-//  
-//
-//  Created by Jaehong Kang on 2020/01/10.
+//  EPUBKit
 //
 
 import Foundation

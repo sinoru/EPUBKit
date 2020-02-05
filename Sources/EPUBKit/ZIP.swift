@@ -1,8 +1,6 @@
 //
 //  ZIP.swift
-//  
-//
-//  Created by Jaehong Kang on 2020/01/09.
+//  EPUBKit
 //
 
 import Foundation

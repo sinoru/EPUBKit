@@ -1,8 +1,6 @@
 //
 //  EPUB+PageCoordinatorManager.swift
-//  
-//
-//  Created by Jaehong Kang on 2020/01/21.
+//  EPUBKit
 //
 
 #if canImport(CoreGraphics) && canImport(WebKit)
