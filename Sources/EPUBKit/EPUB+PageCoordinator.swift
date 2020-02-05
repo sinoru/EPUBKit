@@ -47,7 +47,7 @@ extension EPUB {
             pageCoordinatorManager.$pagePositionsBySize
                 .receive(on: mainQueue)
                 .compactMap { $0[self.pageSize] }
-                .map { (pagePositions) in self.epub.spine.itemRefs.map { pagePositions[$0] } }
+                .map { pagePositions in self.epub.spine.itemRefs.map { pagePositions[$0] } }
                 .eraseToAnyPublisher()
         }
 

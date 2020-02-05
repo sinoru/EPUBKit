@@ -27,7 +27,7 @@ open class XMLParseOperation: Operation {
 }
 
 extension XMLParseOperation: XMLParserDelegate {
-    public func parser(_ parser: XMLParser, didStartElement elementName: String, namespaceURI: String?, qualifiedName qName: String?, attributes attributeDict: [String : String] = [:]) {
+    public func parser(_ parser: XMLParser, didStartElement elementName: String, namespaceURI: String?, qualifiedName qName: String?, attributes attributeDict: [String: String] = [:]) {
         isNodeOpend = true
 
         guard !xmlDocumentCurrentIndexPath.isEmpty else {
